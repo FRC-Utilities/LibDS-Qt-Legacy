@@ -20,9 +20,8 @@
  * THE SOFTWARE.
  */
 
-#pragma once
-#ifndef _LIB_DS_NET_CONSOLE_H
-#define _LIB_DS_NET_CONSOLE_H
+#ifndef _LDS_NET_CONSOLE_H
+#define _LDS_NET_CONSOLE_H
 
 #include "LibDS/Core/Common.h"
 
@@ -37,22 +36,47 @@ class LIB_DS_DECL DS_NetConsole : public QObject
     Q_OBJECT
 
 public:
-    explicit DS_NetConsole();
+    explicit DS_NetConsole (QObject* parent);
 
 public slots:
     /**
      * Changes the port used by the net console to get robot data
      */
-    void SetPort (int port);
+    void setInputPort (int port);
+
+    /**
+     * Changes the port used by the net console to send robot data
+     */
+    void setOutputPort (int port);
+
+    /**
+     * Sends a command to the robot through the Console network
+     */
+    void sendCommand (QString command);
+
+    /**
+     * Enables or disables the option to send commands through the NetConsole
+     */
+    void setAcceptsInput (bool acceptsInput);
 
 signals:
     /**
      * Emitted when a message is received from the robot or the
      * internal Driver Station system
      */
-    void NewMessage (QString);
+    void newMessage (QString);
 
 private:
+    /**
+     * The UDP port of the NetConsole
+     */
+    int m_outPort;
+
+    /**
+     * Controls 'write' access to the console
+     */
+    bool m_acceptsInput;
+
     /**
      * The network socket in which we receive data from the robot
      */
@@ -64,7 +88,7 @@ private slots:
      * Called when we receive data in the network socket.
      * Used to read the input data and process it.
      */
-    void ReadSocketData();
+    void readSocket();
 };
 
 #endif

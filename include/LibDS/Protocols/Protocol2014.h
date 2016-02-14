@@ -20,41 +20,54 @@
  * THE SOFTWARE.
  */
 
-#ifndef _LDS_WATCHDOG_H
-#define _LDS_WATCHDOG_H
+#ifndef _LDS_PROTOCOL_2014_H
+#define _LDS_PROTOCOL_2014_H
 
-#include <QTimer>
-#include "LibDS/Core/Common.h"
+#include "LibDS/Core/ProtocolBase.h"
 
 /**
- * \class DS_Watchdog
- *
- * Implements a simple software watchdog with the help of the \c QTimer class.
- *
- * During normal operation, the program regularly restarts the watchdog timer
- * to prevent it from elapsing, or "timing out".
- * If, due to a hardware fault or program error, the program fails to restart the
- * watchdog, the timer will elapse and generate a timeout signal.
- *
- * The timeout signal is used to initiate corrective action or actions.
- * The corrective actions typically include placing the computer system in a
- * safe state and restoring normal system operation.
+ * \class DS_Protocol2014
+ * \brief Implements the 2014 communication protocol
+ * \note  the virtual functions are already documented in the
+ *        \c DS_ProtocolBase class
  */
-class LIB_DS_DECL DS_Watchdog : public QObject
+class LIB_DS_DECL DS_Protocol2014 : public DS_ProtocolBase
 {
     Q_OBJECT
 
 public:
-    explicit DS_Watchdog();
+    virtual int fmsFrequency();
+    virtual int robotFrequency();
+
+    virtual int fmsInputPort();
+    virtual int fmsOutputPort();
+    virtual int robotInputPort();
+    virtual int robotOutputPort();
+
+    virtual int tcpProbesPort();
+    virtual int netConsoleInputPort();
+    virtual int netConsoleOutputPort();
+
+    virtual bool acceptsConsoleCommands();
+
+    virtual QStringList defaultRadioAddress();
+    virtual QStringList defaultRobotAddress();
 
 public slots:
-    void restart();
+    virtual void reboot();
+    virtual void restartCode();
 
-signals:
-    void timeout();
+private slots:
+    virtual void _resetProtocol();
 
 private:
-    QTimer m_timer;
+    virtual bool _readFMSPacket (QByteArray data);
+    virtual bool _readRobotPacket (QByteArray data);
+
+    virtual QByteArray _getFmsPacket();
+    virtual QByteArray _getClientPacket();
+    virtual QByteArray _getJoystickData();
+    virtual QByteArray _getTimezoneData();
 };
 
 #endif

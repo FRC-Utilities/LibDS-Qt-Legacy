@@ -20,48 +20,20 @@
  * THE SOFTWARE.
  */
 
-#pragma once
-#ifndef _LIB_DS_TIMERS_H
-#define _LIB_DS_TIMERS_H
+#include "LibDS/Protocols/Protocol2016.h"
 
-#include "LibDS/Core/Common.h"
+//=============================================================================
+// DS_Protocol2016::defaultRobotAddress
+//=============================================================================
 
-class QTimer;
-class QThread;
-
-/**
- * \class DS_Timer
- *
- * Implements a set of timers that are separeted from the main thread to
- * guarantee that they are updated in a more timely manner.
- * The timers can be used by objects and classes that are not related to
- * the library for different functions.
- */
-class LIB_DS_DECL DS_Timers : public QObject
+QStringList DS_Protocol2016::defaultRobotAddress()
 {
-    Q_OBJECT
+    QStringList list;
 
-public:
-    static DS_Timers* GetInstance();
-    ~DS_Timers();
+    list.append (QString ("roboRIO-%1-FRC.local").arg (team()));
+    list.append (QString ("roboRIO-%1-FRC").arg (team()));
+    list.append (QString ("172.22.11.2"));
+    list.append (QString ("127.0.0.1"));
 
-public slots:
-    void Start();
-
-signals:
-    void Timeout20();
-    void Timeout100();
-    void Timeout1000();
-
-protected:
-    DS_Timers();
-    static DS_Timers* s_instance;
-
-private:
-    QTimer* t20;
-    QTimer* t100;
-    QTimer* t1000;
-    QThread* m_thread;
-};
-
-#endif
+    return list;
+}

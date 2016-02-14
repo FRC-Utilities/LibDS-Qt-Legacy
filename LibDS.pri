@@ -25,20 +25,13 @@
 CODECFORTR = UTF-8
 CODECFORSRC = UTF-8
 
-QT += gui
-QT += qml
+CONFIG += c++11
+INCLUDEPATH += $$PWD/include
+
 QT += core
 QT += network
 QT += widgets
 QT += multimedia
-
-CONFIG += c++11
-
-!win32* {
-    QMAKE_CXXFLAGS += -std=c++0x
-}
-
-INCLUDEPATH += $$PWD/include
 
 HEADERS += \
     $$PWD/include/LibDS/DriverStation.h \
@@ -50,10 +43,11 @@ HEADERS += \
     $$PWD/include/LibDS/Core/NetConsole.h \
     $$PWD/include/LibDS/Core/ProtocolBase.h \
     $$PWD/include/LibDS/Core/ProtocolManager.h \
-    $$PWD/include/LibDS/Core/Timers.h \
     $$PWD/include/LibDS/Core/Watchdog.h \
     $$PWD/include/LibDS/Core/Discovery/Discovery.h \
-    $$PWD/include/LibDS/Core/Discovery/MDNS.h
+    $$PWD/include/LibDS/Protocols/Protocol2016.h \
+    $$PWD/include/LibDS/Core/Discovery/MDNS_Discovery.h \
+    $$PWD/include/LibDS/Protocols/Protocol2014.h
 
 SOURCES += \
     $$PWD/src/DriverStation.cpp \
@@ -63,10 +57,11 @@ SOURCES += \
     $$PWD/src/Core/NetConsole.cpp \
     $$PWD/src/Core/ProtocolBase.cpp \
     $$PWD/src/Core/ProtocolManager.cpp \
-    $$PWD/src/Core/Timers.cpp \
     $$PWD/src/Core/Watchdog.cpp \
     $$PWD/src/Core/Discovery/Discovery.cpp \
     $$PWD/src/Protocols/Protocol2015.cpp \
-    $$PWD/src/Core/Discovery/MDNS.cpp
+    $$PWD/src/Protocols/Protocol2016.cpp \
+    $$PWD/src/Core/Discovery/MDNS_Discovery.cpp \
+    $$PWD/src/Protocols/Protocol2014.cpp
 
 RESOURCES += $$PWD/etc/sounds/libds-sounds.qrc

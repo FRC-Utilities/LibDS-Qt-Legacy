@@ -27,27 +27,62 @@
 // DS_NetConsole::DS_NetConsole
 //=============================================================================
 
-DS_NetConsole::DS_NetConsole()
+DS_NetConsole::DS_NetConsole (QObject* parent) : QObject (parent)
 {
-    connect (&m_socket, SIGNAL (readyRead()), this, SLOT (ReadSocketData()));
+    m_outPort = 0;
+    m_acceptsInput = false;
+    connect (&m_socket, &QUdpSocket::readyRead,
+             this,      &DS_NetConsole::readSocket);
 }
 
 //=============================================================================
-// DS_NetConsole::DS_SetPort
+// DS_NetConsole::setPort
 //=============================================================================
 
-void DS_NetConsole::SetPort (int port)
+void DS_NetConsole::setInputPort (int port)
 {
-    m_socket.bind (QHostAddress::Any, port,
-                   QUdpSocket::ShareAddress |
-                   QUdpSocket::ReuseAddressHint);
+    m_socket.disconnectFromHost();
+    m_socket.bind (QHostAddress::Any, port, QUdpSocket::ShareAddress);
+
+    DS_LogMessage (kLibLevel,
+                   "NetConsole input port set to: " + QString::number (port));
 }
 
 //=============================================================================
-// DS_NetConsole::ReadSocketData
+// DS_NetConsole::setOutputPort
 //=============================================================================
 
-void DS_NetConsole::ReadSocketData()
+void DS_NetConsole::setOutputPort (int port)
 {
-    emit NewMessage (QString::fromUtf8 (DS_GetSocketData (&m_socket)));
+    m_outPort = port;
+    DS_LogMessage (kLibLevel,
+                   "NetConsole output port set to: " + QString::number (port));
+}
+
+//=============================================================================
+// DS_NetConsole::sendCommand
+//=============================================================================
+
+void DS_NetConsole::sendCommand (QString command)
+{
+    if (m_acceptsInput && m_outPort != DS_PROTOCOL_NO_PORT)
+        m_socket.writeDatagram (command.toUtf8(), QHostAddress::Any, m_outPort);
+}
+
+//=============================================================================
+// DS_NetConsole::setAcceptsInput
+//=============================================================================
+
+void DS_NetConsole::setAcceptsInput (bool acceptsInput)
+{
+    m_acceptsInput = acceptsInput;
+}
+
+//=============================================================================
+// DS_NetConsole::readSocket
+//=============================================================================
+
+void DS_NetConsole::readSocket()
+{
+    emit newMessage (QString::fromUtf8 (DS_GetSocketData (&m_socket)));
 }

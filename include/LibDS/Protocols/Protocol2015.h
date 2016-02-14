@@ -20,9 +20,8 @@
  * THE SOFTWARE.
  */
 
-#pragma once
-#ifndef _LIB_DS_PROTOCOL_2015_H
-#define _LIB_DS_PROTOCOL_2015_H
+#ifndef _LDS_PROTOCOL_2015_H
+#define _LDS_PROTOCOL_2015_H
 
 #include "LibDS/Core/ProtocolBase.h"
 
@@ -37,38 +36,44 @@ class LIB_DS_DECL DS_Protocol2015 : public DS_ProtocolBase
     Q_OBJECT
 
 public:
-    explicit DS_Protocol2015();
+    virtual int fmsFrequency();
+    virtual int robotFrequency();
 
-    int RobotPort();
-    int ClientPort();
-    int NetConsolePort();
-    bool NetConsoleAcceptsInput();
-    QStringList DefaultRadioAddresses();
-    QStringList DefaultRobotAddresses();
+    virtual int fmsInputPort();
+    virtual int fmsOutputPort();
+    virtual int robotInputPort();
+    virtual int robotOutputPort();
+
+    virtual int tcpProbesPort();
+
+    virtual int netConsoleInputPort();
+    virtual int netConsoleOutputPort();
+    virtual bool acceptsConsoleCommands();
+
+    virtual QStringList defaultRadioAddress();
+    virtual QStringList defaultRobotAddress();
 
 public slots:
-    void Reboot();
-    void RestartCode();
+    virtual void reboot();
+    virtual void restartCode();
 
 private slots:
-    void ResetProtocol();
-    void GetRobotInformation();
-    void ProcessRobotInformation (QNetworkReply* reply);
+    virtual void _resetProtocol();
 
 private:
-    bool ReadPacket (QByteArray data);
-    QByteArray GetClientPacket();
-    QByteArray GetJoystickData();
-    QByteArray GetTimezoneData();
+    virtual bool _readFMSPacket (QByteArray data);
+    virtual bool _readRobotPacket (QByteArray data);
 
-    int GetControlCode();
-    int GetAllianceCode();
-    int GetJoystickSize (DS_Joystick* joystick);
+    virtual QByteArray _getFmsPacket();
+    virtual QByteArray _getClientPacket();
+    virtual QByteArray _getJoystickData();
+    virtual QByteArray _getTimezoneData();
 
-    /**
-     * Used for downloading robot information over a FTP connection.
-     */
-    QNetworkAccessManager m_manager;
+    virtual int getControlCode();
+    virtual int getAllianceCode();
+    virtual int getJoystickSize (DS_Joystick* joystick);
+
+    int m_instructionCode;
 };
 
 #endif

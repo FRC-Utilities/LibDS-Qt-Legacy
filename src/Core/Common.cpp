@@ -20,7 +20,18 @@
  * THE SOFTWARE.
  */
 
+#include <QDir>
+#include <QApplication>
+
 #include "LibDS/Core/Common.h"
+
+//=============================================================================
+// Ugly logger hacks
+//=============================================================================
+
+static bool _LOG_INIT = false;
+#define _FORMAT "%-26s %-12s %-10s\n"
+const QString _TIME_FORMAT = "dd/MMM/yyyy hh:mm:ss::zzz";
 
 //=============================================================================
 // DS_GetTimezoneCode
@@ -116,7 +127,52 @@ void DS_SendMessage (QString message)
     QUdpSocket* socket = new QUdpSocket;
     socket->writeDatagram (message.toUtf8(), QHostAddress::LocalHost, 6666);
 
-    free (socket);
+    delete socket;
+}
+
+//=============================================================================
+// DS_LogMessage
+//=============================================================================
+
+void DS_LogMessage (DS_MessageType type,  QString message)
+{
+    /* Get level & time */
+    QString level;
+    QString time = QDateTime::currentDateTime().toString (_TIME_FORMAT);
+
+    /* Open log output file */
+    if (!_LOG_INIT)
+        {
+            _LOG_INIT = true;
+            fprintf (stderr, _FORMAT, "DATE/TIME", "ERROR LEVEL", "MESSAGE");
+        }
+
+    /* Get the error level */
+    switch (type)
+        {
+        case kLibLevel:
+            level = "DS_LIB";
+            break;
+        case kInfoLevel:
+            level = "DS_CLIENT";
+            break;
+        case kWarnLevel:
+            level = "DS_WARN";
+            break;
+        case kErrorLevel:
+            level = "DS_ERROR";
+            break;
+        case kCriticalLevel:
+            level = "DS_CRITICAL";
+            break;
+        }
+
+    /* Write log message */
+    fprintf (stderr,
+             _FORMAT,
+             time.toStdString().c_str(),
+             level.toStdString().c_str(),
+             message.toStdString().c_str());
 }
 
 //=============================================================================
@@ -195,15 +251,21 @@ QString DS_GetControlModeString (DS_ControlMode mode)
 
 QByteArray DS_GetSocketData (QUdpSocket* socket)
 {
-    QByteArray data;
+    QByteArray buffer;
 
-    while (socket->hasPendingDatagrams())
-        {
-            data.resize (socket->pendingDatagramSize());
-            socket->readDatagram (data.data(), data.size());
-        }
+    buffer.resize (socket->pendingDatagramSize());
+    socket->readDatagram (buffer.data(), buffer.size());
 
-    return data;
+    return buffer;
+}
+
+//=============================================================================
+// DS_GetSocketData
+//=============================================================================
+
+QByteArray DS_GetSocketData (QTcpSocket* socket)
+{
+    return socket->readAll();;
 }
 
 //=============================================================================

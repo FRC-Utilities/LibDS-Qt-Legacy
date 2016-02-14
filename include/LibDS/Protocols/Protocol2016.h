@@ -20,26 +20,24 @@
  * THE SOFTWARE.
  */
 
-#include "LibDS/Core/Watchdog.h"
+#ifndef _LDS_PROTOCOL_2016_H
+#define _LDS_PROTOCOL_2016_H
 
-//=============================================================================
-// DS_Watchdog::DS_Watchdog
-//=============================================================================
+#include "Protocol2015.h"
 
-DS_Watchdog::DS_Watchdog()
+/**
+ * Implements the 2016 communication protocol, which is
+ * based on the 2015 protocol.
+ *
+ * The only thing that changed (as far as we know) is
+ * the default robot addresses.
+ */
+class LIB_DS_DECL DS_Protocol2016 : public DS_Protocol2015
 {
-    connect (&m_timer, &QTimer::timeout, this, &DS_Watchdog::timeout);
+    Q_OBJECT
 
-    m_timer.setInterval (1000);
-    m_timer.start();
-}
+public:
+    virtual QStringList defaultRobotAddress();
+};
 
-//=============================================================================
-// DS_Watchdog::restart
-//=============================================================================
-
-void DS_Watchdog::restart()
-{
-    m_timer.stop();
-    m_timer.start();
-}
+#endif
