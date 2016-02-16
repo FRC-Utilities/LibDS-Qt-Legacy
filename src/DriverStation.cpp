@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 WinT 3794 <http://wint3794.org>
+ * Copyright (c) 2015-2016 WinT 3794 <http://wint3794.org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -342,8 +342,8 @@ void DriverStation::init()
         {
             m_init = true;
 
-            QTimer::singleShot (500, this, SIGNAL (initialized()));
-            QTimer::singleShot (500, this,   SLOT (resetEverything()));
+            QTimer::singleShot (100, this, SIGNAL (initialized()));
+            QTimer::singleShot (100, this,   SLOT (resetEverything()));
 
             DS_LogMessage (kLibLevel, "DS Initialized");
         }
