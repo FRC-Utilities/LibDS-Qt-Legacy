@@ -20,24 +20,25 @@
  * THE SOFTWARE.
  */
 
-#ifndef _LDS_PROTOCOL_2016_H
-#define _LDS_PROTOCOL_2016_H
+#include "LibDS/Protocols/FRC/Protocol2016.h"
 
-#include "Protocol2015.h"
+using namespace DS_Protocols;
 
-/**
- * Implements the 2016 communication protocol, which is
- * based on the 2015 protocol.
- *
- * The only thing that changed (as far as we know) is
- * the default robot addresses.
- */
-class LIB_DS_DECL DS_Protocol2016 : public DS_Protocol2015
-{
-    Q_OBJECT
+//=============================================================================
+// FRC_Protocol2016::defaultRobotAddress
+//=============================================================================
 
-public:
-    virtual QStringList defaultRobotAddress();
-};
+QStringList FRC_Protocol2016::defaultRobotAddress() {
+    QStringList list;
 
-#endif
+    list.append (QString ("roboRIO-%1-FRC.local").arg (team()));
+    list.append (QString ("roboRIO-%1.local").arg (team()));
+    list.append (QString ("172.22.11.2"));
+    list.append (QString ("127.0.0.1"));
+
+    /* Try all the DHCP ranges */
+    for (int i = 20; i < 100; ++i)
+        list.append (QString (DS::getStaticIP (10, team(), i)));
+
+    return list;
+}

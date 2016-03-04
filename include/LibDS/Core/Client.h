@@ -25,113 +25,96 @@
 
 #include "LibDS/Core/Common.h"
 
-/**
- * \class DS_Client
- *
- * Sends and receives data between the robot and the Driver Station.
- * The class "redirects" the received data from the robot to the current
- * protocol that is in use by the Driver Station and vice-versa.
- */
-class LIB_DS_DECL DS_Client : public QObject
-{
+namespace DS_Core {
+
+///
+/// Sends and receives data between the robot, the DS and the FMS.
+/// The class redirects the recieved data from the robot
+/// and the FMS to the current protocol in use and vice-versa.
+/// In other words, all networking operations of the LibDS are
+/// handled by this class.
+///
+/// Please note that the robot ports use the UDP protocol, while the
+/// FMS ports use the TCP protocol.
+///
+class LIB_DS_DECL Client : public QObject {
     Q_OBJECT
 
-public:
-    explicit DS_Client (QObject* parent);
-
-public slots:
-    /**
-     * Sends a the input \a data to the FMS
-     */
+  public slots:
+    ///
+    /// Sends the input \a data to the FMS server.
+    /// This function is called periodically based on the timing frequency
+    /// specified by the current protocol.
+    ///
     void sendToFms (QByteArray data);
 
-    /**
-     * Sends a the input \a data to the robot
-     */
+    ///
+    /// Sends the input \a data to the robot controller.
+    /// This function is called periodically based on the timing frequency
+    /// specified by the current protocol.
+    ///
     void sendToRobot (QByteArray data);
 
-    /**
-     * Changes the port in which we receive the FMS packets
-     */
+    ///
+    /// Changes the local port in which we recieve FMS packets.
+    /// This function is called when a protocol is loaded by the DS.
+    ///
     void setFmsInputPort (int port);
 
-    /**
-     * Changes the port in which we send the FMS packets
-     */
+    ///
+    /// Changes the remote port in which we send FMS packets.
+    /// This function is called when a protocol is loaded by the DS.
+    ///
     void setFmsOutputPort (int port);
 
-    /**
-     * Changes the port in where we receive robot packets
-     */
+    ///
+    /// Changes the local port in which we recieve robot packets.
+    /// This function is called when a protocol is loaded by the DS.
+    ///
     void setRobotInputPort (int port);
 
-    /**
-     * Changes the port in which we send the DS->Robot packets
-     */
+    ///
+    /// Changes the remote port in which we send robot packets.
+    /// This function is called when a protocol is loaded by the DS.
+    ///
     void setRobotOutputPort (int port);
 
-    /**
-     * Changes the address where we send the packets to
-     */
+    ///
+    /// Changes the robot address and updates the appropiate socket
+    /// configurations.
+    ///
     void setRobotAddress (QString address);
 
-signals:
-    /**
-     * Emitted when the client receives a packet from the FMS
-     */
+  signals:
+    ///
+    /// Emitted when the local computer recieves a packet from the FMS
+    /// The data is sent to the current protocol for interpretation.
+    ///
     void fmsPacketReceived (QByteArray);
 
-    /**
-     * Emitted when the client receives a packet from the robot
-     */
+    ///
+    /// Emitted when the local computer recieves a packet from the robot.
+    /// The data is sent to the current protocol for interpretation.
+    ///
     void robotPacketReceived (QByteArray);
 
-private slots:
-    /**
-     * Reads the received data and sends it to the \c DriverStation
-     */
-    void readFmsPacket();
+  public:
+    explicit Client (QObject* parent);
 
-    /**
-     * Reads the received data and sends it to the \c DriverStation
-     */
+  private slots:
+    void readFmsPacket();
     void readRobotPacket();
 
-private:
-    /**
-     * The port in which we send data to the FMS
-     */
+  private:
     int m_fmsPort;
-
-    /**
-     * The port in which we send data to the robot
-     */
     int m_robotPort;
-
-    /**
-     * The address of the robot
-     */
     QString m_robotAddress;
-
-    /**
-     * We send data to the robot through this socket
-     */
-    QUdpSocket m_robotSender;
-
-    /**
-     * We send data to the FMS through this port
-     */
     QTcpSocket m_fmsSender;
-
-    /**
-     * We receive data from the robot through this socket
-     */
     QTcpSocket m_fmsReceiver;
-
-    /**
-     * We receive data from the robot through this socket
-     */
+    QUdpSocket m_robotSender;
     QUdpSocket m_robotReceiver;
 };
+
+}
 
 #endif

@@ -26,35 +26,37 @@
 #include <QTimer>
 #include "LibDS/Core/Common.h"
 
-/**
- * \class DS_Watchdog
- *
- * Implements a simple software watchdog with the help of the \c QTimer class.
- *
- * During normal operation, the program regularly restarts the watchdog timer
- * to prevent it from elapsing, or "timing out".
- * If, due to a hardware fault or program error, the program fails to restart the
- * watchdog, the timer will elapse and generate a timeout signal.
- *
- * The timeout signal is used to initiate corrective action or actions.
- * The corrective actions typically include placing the computer system in a
- * safe state and restoring normal system operation.
- */
-class LIB_DS_DECL DS_Watchdog : public QObject
-{
+namespace DS_Core {
+
+///
+/// Implements a simple software watchdog with the help of the \c QTimer class.
+///
+/// During normal operation, the program periodically restarts the watchdog timer
+/// to prevent it from expiring. If, due to hardware or software error, the program
+/// fails to restart the watchdog timer, it shall expire and generate a timeout
+/// signal.
+///
+/// The timeout signal is then received and interpreted by the current protocol,
+/// which in turn will "reset" itself and try to re-establish communications
+/// with the robot controller and (if needed) with the FMS.
+///
+class LIB_DS_DECL Watchdog : public QObject {
     Q_OBJECT
 
-public:
-    explicit DS_Watchdog();
+  public:
+    explicit Watchdog();
 
-public slots:
+  public slots:
     void restart();
+    void setTimeout (int time);
 
-signals:
+  signals:
     void timeout();
 
-private:
+  private:
     QTimer m_timer;
 };
+
+}
 
 #endif

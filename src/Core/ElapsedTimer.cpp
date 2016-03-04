@@ -22,55 +22,52 @@
 
 #include "LibDS/Core/ElapsedTimer.h"
 
+using namespace DS_Core;
+
 //=============================================================================
-// DS_ElapsedTime::DS_ElapsedTime
+//ElapsedTime::DS_ElapsedTime
 //=============================================================================
 
-DS_ElapsedTime::DS_ElapsedTime (QObject* parent) : QObject (parent)
-{
+ElapsedTime::ElapsedTime (QObject* parent) : QObject (parent) {
     stopTimer();
     getElapsedTime();
 }
 
 //=============================================================================
-// DS_ElapsedTime::Stop
+//ElapsedTime::Stop
 //=============================================================================
 
-void DS_ElapsedTime::stopTimer()
-{
+void ElapsedTime::stopTimer() {
     m_enabled = false;
 }
 
 //=============================================================================
-// DS_ElapsedTime:Reset
+//ElapsedTime:Reset
 //=============================================================================
 
-void DS_ElapsedTime::resetTimer()
-{
+void ElapsedTime::resetTimer() {
     m_enabled = true;
     m_time.restart();
 }
 
 //=============================================================================
-// DS_ElapsedTime::GetElapsedTime
+//ElapsedTime::GetElapsedTime
 //=============================================================================
 
-void DS_ElapsedTime::getElapsedTime()
-{
-    if (m_enabled)
-        {
-            quint32 msec = m_time.elapsed();
-            quint32 secs = (msec / 1000);
-            quint32 mins = (secs / 60) % 60;
+void ElapsedTime::getElapsedTime() {
+    if (m_enabled) {
+        quint32 msec = m_time.elapsed();
+        quint32 secs = (msec / 1000);
+        quint32 mins = (secs / 60) % 60;
 
-            secs = secs % 60;
-            msec = msec % 1000;
+        secs = secs % 60;
+        msec = msec % 1000;
 
-            emit elapsedTimeChanged (QString ("%1:%2.%3")
-                                     .arg (mins, 2, 10, QLatin1Char ('0'))
-                                     .arg (secs, 2, 10, QLatin1Char ('0'))
-                                     .arg (QString::number (msec).at (0)));
-        }
+        emit elapsedTimeChanged (QString ("%1:%2.%3")
+                                 .arg (mins, 2, 10, QLatin1Char ('0'))
+                                 .arg (secs, 2, 10, QLatin1Char ('0'))
+                                 .arg (QString::number (msec).at (0)));
+    }
 
     QTimer::singleShot (100, Qt::PreciseTimer, this, SLOT (getElapsedTime()));
 }

@@ -34,8 +34,8 @@ QT += widgets
 QT += multimedia
 
 HEADERS += \
+    $$PWD/include/LibDS.h \
     $$PWD/include/LibDS/DriverStation.h \
-    $$PWD/include/LibDS/Protocols/Protocol2015.h \
     $$PWD/include/LibDS/Core/Client.h \
     $$PWD/include/LibDS/Core/Common.h \
     $$PWD/include/LibDS/Core/ElapsedTimer.h \
@@ -44,10 +44,9 @@ HEADERS += \
     $$PWD/include/LibDS/Core/ProtocolBase.h \
     $$PWD/include/LibDS/Core/ProtocolManager.h \
     $$PWD/include/LibDS/Core/Watchdog.h \
-    $$PWD/include/LibDS/Core/Discovery/Discovery.h \
-    $$PWD/include/LibDS/Protocols/Protocol2016.h \
-    $$PWD/include/LibDS/Core/Discovery/MDNS_Discovery.h \
-    $$PWD/include/LibDS/Protocols/Protocol2014.h
+    $$PWD/include/LibDS/Protocols/FRC/Protocol2016.h \
+    $$PWD/include/LibDS/Protocols/FRC/Protocol2015.h \
+    $$PWD/include/LibDS/Protocols/FRC/Protocol2014.h
 
 SOURCES += \
     $$PWD/src/DriverStation.cpp \
@@ -58,10 +57,8 @@ SOURCES += \
     $$PWD/src/Core/ProtocolBase.cpp \
     $$PWD/src/Core/ProtocolManager.cpp \
     $$PWD/src/Core/Watchdog.cpp \
-    $$PWD/src/Core/Discovery/Discovery.cpp \
-    $$PWD/src/Protocols/Protocol2015.cpp \
-    $$PWD/src/Protocols/Protocol2016.cpp \
-    $$PWD/src/Core/Discovery/MDNS_Discovery.cpp \
-    $$PWD/src/Protocols/Protocol2014.cpp
+    $$PWD/src/Protocols/FRC/Protocol2016.cpp \
+    $$PWD/src/Protocols/FRC/Protocol2015.cpp \
+    $$PWD/src/Protocols/FRC/Protocol2014.cpp
 
 RESOURCES += $$PWD/etc/sounds/libds-sounds.qrc

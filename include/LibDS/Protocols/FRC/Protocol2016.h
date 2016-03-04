@@ -20,20 +20,20 @@
  * THE SOFTWARE.
  */
 
-#include "LibDS/Protocols/Protocol2016.h"
+#ifndef _LDS_PROTOCOL_2016_H
+#define _LDS_PROTOCOL_2016_H
 
-//=============================================================================
-// DS_Protocol2016::defaultRobotAddress
-//=============================================================================
+#include "Protocol2015.h"
 
-QStringList DS_Protocol2016::defaultRobotAddress()
-{
-    QStringList list;
+namespace DS_Protocols {
 
-    list.append (QString ("roboRIO-%1-FRC.local").arg (team()));
-    list.append (QString ("roboRIO-%1-FRC").arg (team()));
-    list.append (QString ("172.22.11.2"));
-    list.append (QString ("127.0.0.1"));
+class LIB_DS_DECL FRC_Protocol2016 : public FRC_Protocol2015 {
+    Q_OBJECT
 
-    return list;
+  public:
+    virtual QStringList defaultRobotAddress();
+};
+
 }
+
+#endif

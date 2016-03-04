@@ -20,22 +20,18 @@
  * THE SOFTWARE.
  */
 
-#ifndef _LDS_PROTOCOL_2015_H
-#define _LDS_PROTOCOL_2015_H
+#ifndef _LDS_PROTOCOL_2014_H
+#define _LDS_PROTOCOL_2014_H
 
 #include "LibDS/Core/ProtocolBase.h"
 
-/**
- * \class DS_Protocol2015
- * \brief Implements the 2015 communication protocol
- * \note  the virtual functions are already documented in the
- *        \c DS_ProtocolBase class
- */
-class LIB_DS_DECL DS_Protocol2015 : public DS_ProtocolBase
-{
+namespace DS_Protocols {
+
+class LIB_DS_DECL FRC_Protocol2014 : public DS_Core::ProtocolBase {
     Q_OBJECT
 
-public:
+  public:
+    explicit FRC_Protocol2014();
     virtual int fmsFrequency();
     virtual int robotFrequency();
 
@@ -45,35 +41,37 @@ public:
     virtual int robotOutputPort();
 
     virtual int tcpProbesPort();
-
     virtual int netConsoleInputPort();
     virtual int netConsoleOutputPort();
+
     virtual bool acceptsConsoleCommands();
 
     virtual QStringList defaultRadioAddress();
     virtual QStringList defaultRobotAddress();
 
-public slots:
+  public slots:
     virtual void reboot();
     virtual void restartCode();
 
-private slots:
+  private slots:
     virtual void _resetProtocol();
+    virtual void _showProtocolWarning();
 
-private:
+  private:
     virtual bool _readFMSPacket (QByteArray data);
     virtual bool _readRobotPacket (QByteArray data);
 
     virtual QByteArray _getFmsPacket();
     virtual QByteArray _getClientPacket();
     virtual QByteArray _getJoystickData();
-    virtual QByteArray _getTimezoneData();
 
-    virtual int getControlCode();
-    virtual int getAllianceCode();
-    virtual int getJoystickSize (DS_Joystick* joystick);
+    QString m_dsVersion;
+    QString m_robotMacAddress;
 
-    int m_instructionCode;
+    bool m_reboot;
+    bool m_restartCode;
 };
+
+}
 
 #endif
