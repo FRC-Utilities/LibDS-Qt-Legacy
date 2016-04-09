@@ -26,11 +26,9 @@
 #include "LibDS/Core/Common.h"
 
 namespace DS_Core {
-class Client;
-class ProtocolBase;
+class AbstractProtocol;
 class NetConsole;
 class ElapsedTime;
-class ProtocolManager;
 }
 
 ///
@@ -70,6 +68,12 @@ class LIB_DS_DECL DriverStation : public QObject {
         kFRCProtocol2015 = 1,
         kFRCProtocol2014 = 2
     };
+
+    ///
+    /// Returns \c true if the current protocol is valid and does not
+    /// point to a NULL pointer
+    ///
+    Q_INVOKABLE bool protocolLoaded();
 
     ///
     /// Returns \c true if the DS has full communications with the robot and
@@ -126,6 +130,11 @@ class LIB_DS_DECL DriverStation : public QObject {
     Q_INVOKABLE QList<DS::Joystick>* joysticks();
 
     ///
+    /// Returns a pointer to the current protocol in use
+    ///
+    Q_INVOKABLE DS_Core::AbstractProtocol* currentProtocol();
+
+    ///
     /// Returns \c true if the robot reports that the user code is loaded
     ///
     Q_INVOKABLE bool robotHasCode();
@@ -134,6 +143,11 @@ class LIB_DS_DECL DriverStation : public QObject {
     /// Returns \c true if the robot is enabled
     ///
     Q_INVOKABLE bool isEnabled();
+
+    ///
+    /// Returns \c true if the client is using a practice match
+    ///
+    Q_INVOKABLE bool isPractice();
 
     ///
     /// Returns \c true if the robot is in test mode
@@ -220,7 +234,7 @@ class LIB_DS_DECL DriverStation : public QObject {
     ///
     /// Changes the protocol that we use to control the robot
     ///
-    Q_INVOKABLE void setProtocol (DS_Core::ProtocolBase* protocol);
+    Q_INVOKABLE void setProtocol (DS_Core::AbstractProtocol* protocol);
 
     ///
     /// Changes the protocol that we use to control the robot
@@ -326,7 +340,7 @@ class LIB_DS_DECL DriverStation : public QObject {
     ///
     /// Emitted when the DS receives and decodes a CAN data structure
     ///
-    void CANInfoReceived (DS::CAN information);
+    void CANInfoReceived (DS::CAN_Information information);
 
     ///
     /// Emitted when the state of the FMS connection is changed
@@ -432,11 +446,14 @@ class LIB_DS_DECL DriverStation : public QObject {
     bool m_init;
 
     ///
-    /// The client, used for sending and receiving data
-    /// from a specified network address and port, go on
-    /// and crash the school's server if you wish
+    /// If set to \c true the client will asume that we are running a practice match
     ///
-    DS_Core::Client* m_client;
+    bool m_practiceRunning;
+
+    ///
+    /// If set to true, the practice timings will be canceled
+    ///
+    bool m_practiceInterrupted;
 
     ///
     /// Used for receiving messages broadcasted by the
@@ -445,16 +462,9 @@ class LIB_DS_DECL DriverStation : public QObject {
     DS_Core::NetConsole* m_netConsole;
 
     ///
-    /// Allows us to select an operation protocol and
-    /// configure it automatically to fit the librarie's
-    /// standards
-    ///
-    DS_Core::ProtocolManager* m_manager;
-
-    ///
     /// Represents the current protocol in operation
     ///
-    DS_Core::ProtocolBase* m_protocol;
+    DS_Core::AbstractProtocol* m_protocol;
 
     ///
     /// Counts the elapsed time since the robot was
@@ -478,30 +488,10 @@ class LIB_DS_DECL DriverStation : public QObject {
 
   private slots:
     ///
-    /// Sends a generated client packet to the robot
-    ///
-    void sendToFms();
-
-    ///
-    /// Sends a generated client packet to the robot
-    ///
-    void sendToRobot();
-
-    ///
     /// Resets the internal values of the library when we disconnect from the
     /// robot.
     ///
     void resetEverything();
-
-    ///
-    /// Sends the received FMS packet to the current protocol for further processing
-    ///
-    void readFmsPacket (QByteArray response);
-
-    ///
-    /// Sends the received robot packet to the current protocol for further processing
-    ///
-    void readRobotPacket (QByteArray response);
 
     ///
     /// Updates the elapsed time when the control mode is changed
