@@ -48,6 +48,7 @@ using namespace DS_Protocols;
 //==================================================================================================
 
 FRC_Protocol2014::FRC_Protocol2014() {
+    m_resync = true;
     m_reboot = false;
     m_restartCode = false;
     QTimer::singleShot (1000, Qt::CoarseTimer, this, SLOT (showProtocolWarning()));
@@ -162,6 +163,7 @@ void FRC_Protocol2014::restartCode() {
 //==================================================================================================
 
 void FRC_Protocol2014::resetProtocol() {
+    m_resync = true;
     m_reboot = false;
     m_restartCode = false;
 }
@@ -174,7 +176,7 @@ void FRC_Protocol2014::showProtocolWarning() {
     DS::sendMessage ("<p><b>"
                      "<font color=#FF7722>WARNING: </font></b>"
                      "<font color=#FFFFFF>"
-                     "This protocol is under heavy development and you WILL "
+                     "This protocol is under heavy development and you may "
                      "encounter bugs. If using a real robot, limit its area of "
                      "movement by placing it over a tote or something. "
                      "<b><u>Safety is your number one priority!</u></b></font></p>");
@@ -194,7 +196,27 @@ bool FRC_Protocol2014::interpretFmsPacket (QByteArray data) {
 //==================================================================================================
 
 bool FRC_Protocol2014::interpretRobotPacket (QByteArray data) {
-    Q_UNUSED (data);
+    /* The packet is smaller than it should be */
+    if (data.length() < 1024)
+        return false;
+
+    /* Read status echo and battery voltage, we could do more things, but we don't need them */
+    quint8 opcode  = data.at (0);
+    quint8 integer = data.at (1);
+    quint8 decimal = data.at (2);
+
+    /* The robot seems to be emergency stopped */
+    if (opcode == ESTOP_ON_BIT && !isEmergencyStopped())
+        setEmergencyStop (true);
+
+    /* Update battery voltage */
+    updateVoltage (QString::number (integer), QString::number (decimal));
+
+    /* If both battery voltage values are 0x37, it means that there is no code loaded */
+    bool has_code = integer != 0x37 && decimal != 0x37;
+    if (has_code != hasCode())
+        updateRobotCode (has_code);
+
     return true;
 }
 
@@ -236,13 +258,13 @@ QByteArray FRC_Protocol2014::generateRobotPacket() {
     QByteArray joysticks = getJoystickData();
     data.replace (8, joysticks.length(), joysticks);
 
-    /* Add FRC Driver Station version */
+    /* Add FRC Driver Station version (same as the one sent by 16.0.1) */
     data[72] = (quint8) 0x30;
-    data[73] = (quint8) 0x31;
+    data[73] = (quint8) 0x34;
     data[74] = (quint8) 0x30;
-    data[75] = (quint8) 0x34;
+    data[75] = (quint8) 0x31;
     data[76] = (quint8) 0x31;
-    data[77] = (quint8) 0x34;
+    data[77] = (quint8) 0x36;
     data[78] = (quint8) 0x30;
     data[79] = (quint8) 0x30;
 
@@ -263,26 +285,38 @@ QByteArray FRC_Protocol2014::generateRobotPacket() {
 QByteArray FRC_Protocol2014::getJoystickData() {
     QByteArray data;
 
-    /* Do not send joystick data on DS init */
-    if (sentRobotPackets() <= 5)
-        return data;
+    /* The protocol must define data for 4 joysticks (even if they are not connected) */
+    for (int i = 0; i < 4; ++i) {
 
-    /* Generate data for each joystick */
-    for (int i = 0; i < joysticks()->count(); ++i) {
-        int _num_axes    = joysticks()->at (i).numAxes;
-        int _num_buttons = joysticks()->at (i).numButtons;
+        /* If set to false, the code will generate neutral button and axis values */
+        bool joystick_exists = joysticks()->count() > i;
 
-        /* Add axis data */
-        for (int axis = 0; axis < _num_axes; ++axis)
-            data.append (joysticks()->at (i).axes [axis]);
+        /* Get number of axes and buttons of the current joystick */
+        int num_axes = joystick_exists ? joysticks()->at (i).numAxes : 0;
+        int num_buttons = joystick_exists ? joysticks()->at (i).numButtons : 0;
+
+        /* Generate axis data (only 6 axes, no more, no less) */
+        for (int axis = 0; axis < 6; ++axis) {
+            /* The joystick exists and the axis also exists */
+            if (joystick_exists && axis < num_axes)
+                data.append (joysticks()->at (i).axes[axis] * 127);
+
+            /* Append neutral data, since the axis is not real */
+            else
+                data.append ((char) 0x00);
+        }
 
         /* Generate button data */
-        int _button_data = 0;
-        for (int button = 0; button < _num_buttons; ++button)
-            _button_data += joysticks()->at (i).buttons [button] ? qPow (2, button) : 0;
+        int button_data = 0;
+        for (int button = 0; button < num_buttons; ++button) {
+            /* Joystick exists and button is pressed */
+            if (joystick_exists && joysticks()->at (i).buttons[button])
+                button_data |= (int) qPow (2, button);
+        }
 
-        /* Add button data */
-        data.append (DS::intToBytes (_button_data));
+        /* Append the button data in two bytes */
+        data.append ((button_data & 0xff00) >> 8);
+        data.append ((button_data & 0xff));
     }
 
     return data;
@@ -344,6 +378,9 @@ quint8 FRC_Protocol2014::getOperationCode() {
         code = ESTOP_OFF_BIT;
         break;
     }
+
+    if (m_resync)
+        code |= RESYNC_BIT;
 
     if (isFmsAttached())
         code |= FMS_ATTACHED_BIT;
