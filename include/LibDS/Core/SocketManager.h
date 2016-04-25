@@ -116,6 +116,7 @@ class SocketManager : public QObject {
 
   private:
     int m_iterator;
+    int m_fmsOutput;
     int m_robotInput;
     int m_robotOutput;
 
@@ -124,10 +125,10 @@ class SocketManager : public QObject {
     int m_scannerCount;
     QStringList m_list;
 
-    QTcpSocket* m_fmsInputSocket;
-    QTcpSocket* m_fmsOutputSocket;
-    QUdpSocket* m_robotInputSocket;
-    QUdpSocket* m_robotOutputSocket;
+    QUdpSocket m_fmsInputSocket;
+    QUdpSocket m_fmsOutputSocket;
+    QUdpSocket m_robotInputSocket;
+    QUdpSocket m_robotOutputSocket;
 
     QList<QUdpSocket*> m_inputSockets;
     QList<QUdpSocket*> m_outputSockets;

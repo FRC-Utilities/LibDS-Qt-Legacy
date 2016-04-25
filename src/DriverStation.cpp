@@ -118,7 +118,6 @@ DriverStation::DriverStation() {
     m_netConsole  = new DS_Core::NetConsole (this);
     m_elapsedTime = new DS_Core::ElapsedTime (this);
 
-
     /* Lamda-functions */
     connect (this, &DriverStation::codeChanged,
     [ = ] (bool ignored) {
@@ -128,6 +127,11 @@ DriverStation::DriverStation() {
     connect (this, &DriverStation::communicationsChanged,
     [ = ] (DS::DS_CommStatus status) {
         Q_UNUSED (status);
+        emit robotStatusChanged (getRobotStatus());
+    });
+    connect (this, &DriverStation::controlModeChanged,
+    [ = ] (DS::ControlMode mode) {
+        Q_UNUSED (mode);
         emit robotStatusChanged (getRobotStatus());
     });
 
@@ -378,7 +382,7 @@ void DriverStation::init() {
         m_init = true;
 
         QTimer::singleShot (100, this, SIGNAL (initialized()));
-        QTimer::singleShot (100, this,   SLOT (resetEverything()));
+        QTimer::singleShot (100, this, SLOT   (resetEverything()));
 
         DS::log (DS::kLibLevel, "DS Initialized");
     }
@@ -527,6 +531,12 @@ void DriverStation::setProtocol (DS_Core::AbstractProtocol* protocol) {
              this,              &DriverStation::CANInfoReceived);
     connect (currentProtocol(), &DS_Core::AbstractProtocol::fmsChanged,
              this,              &DriverStation::fmsChanged);
+
+    connect (currentProtocol(), &DS_Core::AbstractProtocol::enabledChanged,
+    [ = ] (bool enabled) {
+        Q_UNUSED (enabled);
+        emit robotStatusChanged (getRobotStatus());
+    });
 
     /* Start the protocol & re-configure the library modules */
     m_protocol->start();
@@ -727,8 +737,7 @@ void DriverStation::updateJoystickButton (int js, int button, bool pressed) {
 //==================================================================================================
 
 QString DriverStation::getRobotStatus() {
-    if (protocolLoaded()
-            && currentProtocol()->isConnectedToRobot()) {
+    if (protocolLoaded() && currentProtocol()->isConnectedToRobot()) {
         if (currentProtocol()->isEmergencyStopped())
             return tr ("Emergency Stopped");
 
@@ -750,6 +759,11 @@ QString DriverStation::getRobotStatus() {
 void DriverStation::resetEverything() {
     m_elapsedTime->resetTimer();
     m_elapsedTime->stopTimer();
+
+    if (isPractice()) {
+        m_practiceRunning = false;
+        m_practiceInterrupted = true;
+    }
 
     emit codeChanged           (false);
     emit elapsedTimeChanged    ("00:00.0");
