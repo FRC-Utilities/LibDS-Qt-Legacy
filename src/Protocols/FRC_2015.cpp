@@ -28,7 +28,7 @@ using namespace DS_Protocols;
 // Protocol bytes
 //==================================================================================================
 
-/* Robot mode codes */
+/* Robot mode flags (applies to DS, roboRIO and FMS) */
 const uint OP_MODE_TEST         = 0x01; // 0000 0001
 const uint OP_MODE_AUTONOMOUS   = 0x02; // 0000 0010
 const uint OP_MODE_TELEOPERATED = 0x00; // 0000 0000
@@ -102,6 +102,50 @@ void FRC_Protocol2015::resetProtocol() {
 }
 
 //==================================================================================================
+// FRC_Protocol2015::parseExtended
+//==================================================================================================
+
+void FRC_Protocol2015::parseExtended (QByteArray data) {
+    if (data.isEmpty() || data.length() < 2)
+        return;
+
+    uint tag = data.at (1);
+
+    if (tag == R_TAG_JOYSTICK_OUT) {
+        /* TODO */
+    }
+
+    else if (tag == R_TAG_DISK_INFO) {
+        if (data.length() > 5)
+            emit diskUsageChanged (data.at (5));
+    }
+
+    else if (tag == R_TAG_CPU_INFO) {
+        int count = data.at (2);
+        for (int i = 0; i < count; ++i)
+            if (data.length() > i + 12)
+                emit cpuUsageChanged (data.at (i + 12));
+    }
+
+    else if (tag == R_TAG_RAM_INFO) {
+        if (data.length() > 5)
+            emit ramUsageChanged (data.at (5));
+    }
+
+    else if (tag == R_TAG_CAN_METRICS) {
+        if (data.length() > 15) {
+            DS::CAN_Information can;
+            can.util     = data.at (11);
+            can.busOff   = data.at (12);
+            can.txFull   = data.at (13);
+            can.receive  = data.at (14);
+            can.transmit = data.at (15);
+            emit CANInfoReceived (can);
+        }
+    }
+}
+
+//==================================================================================================
 // FRC_Protocol2015::readFMSPacket
 //==================================================================================================
 
@@ -170,25 +214,12 @@ bool FRC_Protocol2015::interpretRobotPacket (QByteArray data) {
         setEmergencyStop (false);
 
     /* Calculate the voltage */
-    float voltage = integer + (99 * decimal / 255);
-    updateVoltage (voltage);
+    updateVoltage ((float) (integer + ((float) (decimal) * 99 / 255 / 100)));
 
-    /* Read extra data tags */
-    if (data.length() > 8) {
-        switch (data.at (8)) {
-        case R_TAG_JOYSTICK_OUT:
-            break;
-        case R_TAG_DISK_INFO:
-            break;
-        case R_TAG_CPU_INFO:
-            break;
-        case R_TAG_RAM_INFO:
-            break;
-        case R_TAG_CAN_METRICS:
-            break;
-        default:
-            break;
-        }
+    /* This is an extended packet, read its extra data */
+    if (data.size() > 8) {
+        std::string extended = std::string (data.constData(), data.length());
+        parseExtended (QString::fromStdString (extended.substr (8)).toUtf8());
     }
 
     /* Packet was successfully read, reset watchdog */

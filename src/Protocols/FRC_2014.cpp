@@ -51,7 +51,6 @@ FRC_Protocol2014::FRC_Protocol2014() {
     m_resync = true;
     m_reboot = false;
     m_restartCode = false;
-    QTimer::singleShot (1000, Qt::CoarseTimer, this, SLOT (showProtocolWarning()));
 }
 
 //==================================================================================================
@@ -81,20 +80,6 @@ void FRC_Protocol2014::resetProtocol() {
 }
 
 //==================================================================================================
-// FRC_Protocol2014::showProtocolWarning
-//==================================================================================================
-
-void FRC_Protocol2014::showProtocolWarning() {
-    DS::sendMessage ("<p><b>"
-                     "<font color=#FF7722>WARNING: </font></b>"
-                     "<font color=#FFFFFF>"
-                     "This protocol is under heavy development and you may "
-                     "encounter bugs. If using a real robot, limit its area of "
-                     "movement by placing it over a tote or something. "
-                     "<b><u>Safety is your number one priority!</u></b></font></p>");
-}
-
-//==================================================================================================
 // FRC_Protocol2014::interpretFMSPacket
 //==================================================================================================
 
@@ -112,18 +97,26 @@ bool FRC_Protocol2014::interpretRobotPacket (QByteArray data) {
     if (data.length() < 1024)
         return false;
 
-    /* Read status echo and battery voltage, we could do more things, but we don't need them */
+    /* Read status echo code and voltage */
     uint opcode  = data.at (0);
     uint integer = data.at (1);
     uint decimal = data.at (2);
+
+    /* Parse the voltage (which is stored in a strange format) */
+    QString voltage;
+    QByteArray hex = data.toHex();
+    voltage.append (hex.at (2));
+    voltage.append (hex.at (3));
+    voltage.append (".");
+    voltage.append (hex.at (4));
+    voltage.append (hex.at (5));
 
     /* The robot seems to be emergency stopped */
     if (opcode == ESTOP_ON_BIT && !isEmergencyStopped())
         setEmergencyStop (true);
 
     /* Calculate the voltage */
-    float voltage = integer + (99 * decimal / 255);
-    updateVoltage (voltage);
+    updateVoltage (voltage.toFloat());
 
     /* If both battery voltage values are 0x37, it means that there is no code loaded */
     updateRobotCode ((integer != 0x37) && (decimal != 0x37));
