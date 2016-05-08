@@ -184,7 +184,7 @@ class LIB_DS_DECL AbstractProtocol : public QObject {
     ///
     /// Returns the communication status between the robot and the DS.
     ///
-    inline DS::DS_CommStatus communicationStatus() const {
+    inline DS::CommStatus communicationStatus() const {
         return m_communicationStatus;
     }
 
@@ -338,7 +338,7 @@ class LIB_DS_DECL AbstractProtocol : public QObject {
     /// \note This function must be re-implemented by each protocol
     ///
     inline virtual bool acceptsConsoleCommands() {
-        return false;
+        return netConsoleOutputPort() != DS::INVALID_PORT;
     }
 
     ///
@@ -377,6 +377,30 @@ class LIB_DS_DECL AbstractProtocol : public QObject {
     ///
     inline virtual DS::SocketType robotSocketType() {
         return DS::kUdpSocket;
+    }
+
+    ///
+    /// Represents the socket flags for the FMS input socket.
+    /// You may re-implement this function if needed.
+    ///
+    inline virtual QAbstractSocket::BindMode fmsBindFlags() const {
+        return QAbstractSocket::ReuseAddressHint | QAbstractSocket::ShareAddress;
+    }
+
+    ///
+    /// Represents the socket flags for the robot input socket.
+    /// You may re-implement this function if needed.
+    ///
+    inline virtual QAbstractSocket::BindMode robotBindFlags() const {
+        return QAbstractSocket::ReuseAddressHint | QAbstractSocket::ShareAddress;
+    }
+
+    ///
+    /// Represents the socket flags for the NetConsole input socket.
+    /// You may re-implement this function if needed.
+    ///
+    inline virtual QAbstractSocket::BindMode ncBindFlags() const {
+        return QAbstractSocket::ReuseAddressHint | QAbstractSocket::ShareAddress;
     }
 
   public slots:
@@ -551,7 +575,7 @@ class LIB_DS_DECL AbstractProtocol : public QObject {
         emit voltageChanged (intString + "." + decString);
     }
 
-    inline void updateCommStatus (DS::DS_CommStatus status) {
+    inline void updateCommStatus (DS::CommStatus status) {
         m_communicationStatus = status;
         emit communicationsChanged (m_communicationStatus);
     }
@@ -575,7 +599,7 @@ class LIB_DS_DECL AbstractProtocol : public QObject {
     void controlModeChanged (DS::ControlMode);
     void CANInfoReceived (DS::CAN_Information);
     void rumbleRequest (DS::RumbleRequest request);
-    void communicationsChanged (DS::DS_CommStatus);
+    void communicationsChanged (DS::CommStatus);
 
   private:
     int m_team;
@@ -601,7 +625,7 @@ class LIB_DS_DECL AbstractProtocol : public QObject {
 
     DS::Alliance m_alliance;
     DS::ControlMode m_controlMode;
-    DS::DS_CommStatus m_communicationStatus;
+    DS::CommStatus m_communicationStatus;
 
     QStringList m_robotIPs;
     QStringList m_radioIPs;
