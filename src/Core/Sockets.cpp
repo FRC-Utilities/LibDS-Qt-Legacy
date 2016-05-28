@@ -49,11 +49,11 @@ Sockets::~Sockets()
  */
 int Sockets::socketCount() const
 {
-    if (m_socketCount > 0)
-        return m_socketCount;
+    if (customSocketCount() > 0)
+        return customSocketCount();
 
     else
-        return qMax (robotIpList().count() / 8, 4);
+        return qMax (robotIpList().count() / 6, 4);
 }
 
 /**
@@ -102,6 +102,16 @@ int Sockets::radioOutputPort() const
 int Sockets::robotOutputPort() const
 {
     return m_robotOutput;
+}
+
+/**
+ * Returns the custom socket count set by the client or user. If this value
+ * is equal to zero, then this class will calculate an value appropiate to
+ * the size of the robot IPs list.
+ */
+int Sockets::customSocketCount() const
+{
+    return m_socketCount;
 }
 
 /**
@@ -245,6 +255,8 @@ void Sockets::setRobotIp (const QString& ip)
  */
 void Sockets::setRobotIpList (const QStringList& list)
 {
+    m_robotIpList.clear();
+
     m_robotIpList = list;
     generateLocalNetworkAddresses();
 }
@@ -492,12 +504,12 @@ void Sockets::generateSocketPairs()
  *         - ...
  *         - 168.192.1.254
  *     - The function will do this for each interface (ethernet, wifi, usb, etc)
- *
- * Every IP outputed by this function is validated, avoiding use of malformed
- * addresses.
  */
 void Sockets::generateLocalNetworkAddresses()
 {
+    if (robotSocketType == DS::kSocketTypeTCP)
+        return;
+
     foreach (QNetworkInterface interface, QNetworkInterface::allInterfaces()) {
         bool isUp      = (interface.flags() & QNetworkInterface::IsUp);
         bool isRunning = (interface.flags() & QNetworkInterface::IsRunning);
@@ -519,12 +531,5 @@ void Sockets::generateLocalNetworkAddresses()
         }
     }
 
-    QStringList validated;
-    foreach (QString ip, m_robotIpList) {
-        if (QHostAddress (ip).protocol() == QAbstractSocket::IPv4Protocol)
-            validated.append (ip);
-    }
-
-    m_robotIpList = validated;
     generateSocketPairs();
 }
