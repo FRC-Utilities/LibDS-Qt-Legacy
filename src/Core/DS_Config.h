@@ -9,6 +9,8 @@
 #ifndef _LIB_DS_PRIVATE_CONFIG_H
 #define _LIB_DS_PRIVATE_CONFIG_H
 
+#include <QTimer>
+#include <QElapsedTimer>
 #include <Core/DS_Base.h>
 
 /**
@@ -73,6 +75,9 @@ public slots:
     void updateVoltageStatus (const VoltageStatus& statusChanged);
     void updateOperationStatus (const OperationStatus& statusChanged);
 
+private slots:
+    void updateElapsedTime();
+
 protected:
     DS_Config();
 
@@ -92,6 +97,9 @@ private:
     CommStatus m_robotCommStatus;
     VoltageStatus m_voltageStatus;
     OperationStatus m_operationStatus;
+
+    bool m_timerEnabled;
+    QElapsedTimer m_timer;
 };
 
 #endif

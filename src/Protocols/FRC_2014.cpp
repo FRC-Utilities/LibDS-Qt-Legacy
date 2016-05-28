@@ -156,17 +156,17 @@ void FRC_2014::onRobotWatchdogExpired()
 /**
  * FMS communications work with UDP datagrams
  */
-DS_Common::SocketType FRC_2014::fmsSocketType()
+DS::SocketType FRC_2014::fmsSocketType()
 {
-    return DS_Common::kUdpSocket;
+    return DS::kSocketTypeUDP;
 }
 
 /**
  * Robot communications work with UDP datagrams
  */
-DS_Common::SocketType FRC_2014::robotSocketType()
+DS::SocketType FRC_2014::robotSocketType()
 {
-    return DS_Common::kUdpSocket;
+    return DS::kSocketTypeUDP;
 }
 
 /**
@@ -174,7 +174,7 @@ DS_Common::SocketType FRC_2014::robotSocketType()
  */
 QString FRC_2014::defaultRadioAddress()
 {
-    return DS_Common::getStaticIP (10, config()->team(), 1);
+    return DS::getStaticIP (10, config()->team(), 1);
 }
 
 /**
@@ -183,7 +183,7 @@ QString FRC_2014::defaultRadioAddress()
 QStringList FRC_2014::defaultRobotAddresses()
 {
     QStringList list;
-    list.append (DS_Common::getStaticIP (10, config()->team(), 2));
+    list.append (DS::getStaticIP (10, config()->team(), 2));
     return list;
 }
 
@@ -284,7 +284,7 @@ bool FRC_2014::interpretRobotPacket (const QByteArray& data)
 
     /* The robot seems to be emergency stopped */
     if (opcode == ESTOP_ON && !config()->isEmergencyStopped())
-        config()->updateOperationStatus (DS_Common::kEmergencyStop);
+        config()->updateOperationStatus (DS::kOperationEmergencyStop);
 
     /* Update code status & voltage */
     bool hasCode = (integer != 0x37) && (decimal != 0x37);
@@ -300,7 +300,7 @@ bool FRC_2014::interpretRobotPacket (const QByteArray& data)
  */
 quint8 FRC_2014::getAlliance()
 {
-    if (config()->alliance() == DS_Common::kBlueAlliance)
+    if (config()->alliance() == DS::kAllianceBlue)
         return ALLIANCE_BLUE;
 
     return ALLIANCE_RED;
@@ -311,13 +311,13 @@ quint8 FRC_2014::getAlliance()
  */
 quint8 FRC_2014::getPosition()
 {
-    if (config()->position() == DS_Common::kPosition1)
+    if (config()->position() == DS::kPosition1)
         return POSITION_1;
 
-    if (config()->position() == DS_Common::kPosition2)
+    if (config()->position() == DS::kPosition2)
         return POSITION_2;
 
-    if (config()->position() == DS_Common::kPosition3)
+    if (config()->position() == DS::kPosition3)
         return POSITION_3;
 
     return POSITION_1;
@@ -341,13 +341,13 @@ quint8 FRC_2014::getOperationCode()
     quint8 enabled = config()->isEnabled() ? ENABLED : 0x00;
 
     switch (config()->controlMode()) {
-    case DS_Common::kControlTest:
+    case DS::kControlTest:
         code |= enabled + CONTROL_TEST;
         break;
-    case DS_Common::kControlAutonomous:
+    case DS::kControlAutonomous:
         code |= enabled + CONTROL_AUTONOMOUS;
         break;
-    case DS_Common::kControlTeleoperated:
+    case DS::kControlTeleoperated:
         code |= enabled + CONTROL_TELEOP;
         break;
     default:

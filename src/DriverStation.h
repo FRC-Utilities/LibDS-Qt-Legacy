@@ -63,6 +63,13 @@ public:
     Q_INVOKABLE int maxButtonCount() const;
     Q_INVOKABLE int maxJoystickCount() const;
 
+    Q_INVOKABLE int getNumAxes (int joystick);
+    Q_INVOKABLE int getNumPOVs (int joystick);
+    Q_INVOKABLE int getNumButtons (int joystick);
+    Q_INVOKABLE int getRealNumAxes (int joystick);
+    Q_INVOKABLE int getRealNumPOVs (int joystick);
+    Q_INVOKABLE int getRealNumButtons (int joystick);
+
     Q_INVOKABLE int joystickCount();
     Q_INVOKABLE JoystickList* joysticks();
 
@@ -138,11 +145,13 @@ protected:
 
 signals:
     void resetted();
+    void initialized();
     void protocolChanged();
     void newMessage (QString message);
     void joystickCountChanged (int count);
 
 private:
+    bool m_init;
     bool m_running;
     int m_fmsInterval;
     int m_radioInterval;

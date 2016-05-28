@@ -40,8 +40,8 @@ public:
     virtual void onRobotWatchdogExpired();
 
     /* Information regarding socket types */
-    virtual DS_Common::SocketType fmsSocketType();
-    virtual DS_Common::SocketType robotSocketType();
+    virtual DS::SocketType fmsSocketType();
+    virtual DS::SocketType robotSocketType();
 
     /* Default addresses */
     virtual QString defaultRadioAddress();

@@ -18,14 +18,14 @@ class ConfigurableSocket : public QObject
     Q_OBJECT
 
 public:
-    explicit ConfigurableSocket (const DS_Common::SocketType& type);
+    explicit ConfigurableSocket (const DS::SocketType& type);
 
     QByteArray readAll();
     QString peerAddress();
     QTcpSocket* tcpSocket();
     QUdpSocket* udpSocket();
     QAbstractSocket* socket();
-    DS_Common::SocketType socketType() const;
+    DS::SocketType socketType() const;
 
     qint64 writeDatagram (const QByteArray& data, const QString& ip, quint16 port);
     qint64 writeDatagram (const QByteArray& data, const QHostAddress& ip,
@@ -47,7 +47,7 @@ private:
     QString m_peerAddress;
     QUdpSocket m_udpSocket;
     QTcpSocket m_tcpSocket;
-    DS_Common::SocketType m_socketType;
+    DS::SocketType m_socketType;
 };
 
 #endif

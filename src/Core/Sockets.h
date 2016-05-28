@@ -31,9 +31,9 @@ public:
     QString robotIp() const;
     QStringList robotIpList() const;
 
-    DS_Common::SocketType fmsSocketType() const;
-    DS_Common::SocketType radioSocketType() const;
-    DS_Common::SocketType robotSocketType() const;
+    DS::SocketType fmsSocketType() const;
+    DS::SocketType radioSocketType() const;
+    DS::SocketType robotSocketType() const;
 
 public slots:
     void sendToFMS (const QByteArray& data);
@@ -53,9 +53,9 @@ public slots:
     void setRadioOutputPort (const int& port);
     void setRobotOutputPort (const int& port);
 
-    void setFMSSocketType (const DS_Common::SocketType& type);
-    void setRadioSocketType (const DS_Common::SocketType& type);
-    void setRobotSocketType (const DS_Common::SocketType& type);
+    void setFMSSocketType (const DS::SocketType& type);
+    void setRadioSocketType (const DS::SocketType& type);
+    void setRobotSocketType (const DS::SocketType& type);
 
 signals:
     void fmsPacketReceived (QByteArray data);
@@ -95,9 +95,9 @@ private:
     int m_socketCount;
     int m_iterator;
 
-    DS_Common::SocketType m_fmsSocketType;
-    DS_Common::SocketType m_radioSocketType;
-    DS_Common::SocketType m_robotSocketType;
+    DS::SocketType m_fmsSocketType;
+    DS::SocketType m_radioSocketType;
+    DS::SocketType m_robotSocketType;
 };
 
 #endif

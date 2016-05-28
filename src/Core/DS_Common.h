@@ -9,19 +9,20 @@
 #ifndef _LIB_DS_COMMON_H
 #define _LIB_DS_COMMON_H
 
+#include <QtMath>
 #include <QObject>
 #include <QDateTime>
 #include <QStringList>
 
 #define DISABLED_PORT 0
-#define JoystickList QList<DS_Common::Joystick*>
+#define JoystickList QList<DS::Joystick*>
 
 /**
  * Holds the common data types shared between the \c DriverStation
  * and the \c Protocol classes of this library. This data must be registered
  * inside a QObject class in order to allow full support for QML applications.
  */
-class DS_Common : public QObject
+class DS : public QObject
 {
     Q_OBJECT
     Q_ENUMS (Alliance)
@@ -51,8 +52,8 @@ public:
      * (e.g adjust its sensors, change dashboard values, etc.)
      */
     enum Alliance {
-        kRedAlliance,
-        kBlueAlliance
+        kAllianceRed,
+        kAllianceBlue
     };
 
     /**
@@ -91,8 +92,8 @@ public:
      * Represents the enabled state of the robot.
      */
     enum EnableStatus {
-        kRobotEnabled,
-        kRobotDisabled
+        kEnabled,
+        kDisabled
     };
 
     /**
@@ -100,8 +101,8 @@ public:
      * Represents the operation status of the robot.
      */
     enum OperationStatus {
-        kNormal,
-        kEmergencyStop
+        kOperationNormal,
+        kOperationEmergencyStop
     };
 
     /**
@@ -119,8 +120,8 @@ public:
      * Represents the socket types that can be used by the DS modules
      */
     enum SocketType {
-        kUdpSocket,
-        kTcpSocket
+        kSocketTypeUDP,
+        kSocketTypeTCP
     };
 
     /**
@@ -130,6 +131,9 @@ public:
         int numAxes = 0;
         int numPOVs = 0;
         int numButtons = 0;
+        int realNumAxes = 0;
+        int realNumPOVs = 0;
+        int realNumButtons = 0;
 
         int* povs;
         float* axes;

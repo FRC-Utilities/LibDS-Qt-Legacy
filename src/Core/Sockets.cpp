@@ -31,9 +31,9 @@ Sockets::Sockets()
     m_radioOutput     = DISABLED_PORT;
     m_robotOutput     = DISABLED_PORT;
     m_robotIpList     = QStringList ("");
-    m_fmsSocketType   = DS_Common::kUdpSocket;
-    m_radioSocketType = DS_Common::kUdpSocket;
-    m_robotSocketType = DS_Common::kUdpSocket;
+    m_fmsSocketType   = DS::kSocketTypeUDP;
+    m_radioSocketType = DS::kSocketTypeUDP;
+    m_robotSocketType = DS::kSocketTypeUDP;
 }
 
 Sockets::~Sockets()
@@ -142,7 +142,7 @@ QStringList Sockets::robotIpList() const
 /**
  * Returns the socket type (UDP or TCP) used for client/FMS communications.
  */
-DS_Common::SocketType Sockets::fmsSocketType() const
+DS::SocketType Sockets::fmsSocketType() const
 {
     return m_fmsSocketType;
 }
@@ -150,7 +150,7 @@ DS_Common::SocketType Sockets::fmsSocketType() const
 /**
  * Returns the socket type used for client/radio communications.
  */
-DS_Common::SocketType Sockets::radioSocketType() const
+DS::SocketType Sockets::radioSocketType() const
 {
     return m_radioSocketType;
 }
@@ -158,7 +158,7 @@ DS_Common::SocketType Sockets::radioSocketType() const
 /**
  * Returns the socket type used for client/radio communications.
  */
-DS_Common::SocketType Sockets::robotSocketType() const
+DS::SocketType Sockets::robotSocketType() const
 {
     return m_robotSocketType;
 }
@@ -186,7 +186,7 @@ void Sockets::sendToRobot (const QByteArray& data)
     if (m_robotSender && !robotIp().isEmpty())
         m_robotSender->writeDatagram (data, robotIp(), robotOutputPort());
 
-    else if (robotSocketType() == DS_Common::kUdpSocket) {
+    else if (robotSocketType() == DS::kSocketTypeUDP) {
         refreshRobotIPs();
         for (int i = 0; i < robotIpList().count(); ++i) {
             if (socketCount() > i && robotIpList().count() > m_iterator + i) {
@@ -324,7 +324,7 @@ void Sockets::setRobotOutputPort (const int& port)
  * Changes the socket type (UDP or TCP) that we use to communicate with
  * the FMS.
  */
-void Sockets::setFMSSocketType (const DS_Common::SocketType& type)
+void Sockets::setFMSSocketType (const DS::SocketType& type)
 {
     m_fmsSocketType = type;
     free (m_fmsSender);
@@ -338,7 +338,7 @@ void Sockets::setFMSSocketType (const DS_Common::SocketType& type)
  * Changes the socket type (UDP or TCP) that we use to communicate with
  * the robot radio.
  */
-void Sockets::setRadioSocketType (const DS_Common::SocketType& type)
+void Sockets::setRadioSocketType (const DS::SocketType& type)
 {
     m_radioSocketType = type;
     free (m_radioSender);
@@ -352,12 +352,12 @@ void Sockets::setRadioSocketType (const DS_Common::SocketType& type)
  * Changes the socket type (UDP or TCP) that we use to communicate with
  * the robot
  */
-void Sockets::setRobotSocketType (const DS_Common::SocketType& type)
+void Sockets::setRobotSocketType (const DS::SocketType& type)
 {
     m_robotSocketType = type;
     free (m_robotSender);
     m_robotSender = new ConfigurableSocket (type);
-    if (type == DS_Common::kTcpSocket) {
+    if (type == DS::kSocketTypeTCP) {
         m_robotSender->socket()->connectToHost (robotIp(),
                                                 robotOutputPort(),
                                                 QIODevice::WriteOnly);
@@ -421,7 +421,7 @@ void Sockets::readRobotData()
  */
 void Sockets::refreshRobotIPs()
 {
-    if (!robotIp().isEmpty() || robotSocketType() == DS_Common::kTcpSocket)
+    if (!robotIp().isEmpty() || robotSocketType() == DS::kSocketTypeTCP)
         return;
 
     if (robotIpList().count() > m_iterator + socketCount())

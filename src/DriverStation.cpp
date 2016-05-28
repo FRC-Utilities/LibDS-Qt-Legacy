@@ -26,6 +26,7 @@ DriverStation::DriverStation()
     m_robotInterval = 1000;
 
     /* Initialize the protocol, but do not allow DS to send packets */
+    m_init = false;
     m_running = false;
     m_protocol = Q_NULLPTR;
 
@@ -155,7 +156,7 @@ bool DriverStation::isInTest() const
  */
 bool DriverStation::isEnabled() const
 {
-    return enableStatus() == kRobotEnabled;
+    return enableStatus() == kEnabled;
 }
 
 /**
@@ -196,7 +197,7 @@ bool DriverStation::isVoltageBrownout() const
  */
 bool DriverStation::isEmergencyStopped() const
 {
-    return operationStatus() == kEmergencyStop;
+    return operationStatus() == kOperationEmergencyStop;
 }
 
 /**
@@ -315,6 +316,87 @@ int DriverStation::maxJoystickCount() const
 }
 
 /**
+ * Returns the number of axes registered with the given joystick.
+ * \note This will only return the value supported by the protocol, to get
+ *       the actual value, use the \c getRealNumAxes() function
+ */
+int DriverStation::getNumAxes (int joystick)
+{
+    if (joysticks()->count() > joystick)
+        return joysticks()->at (joystick)->numAxes;
+
+    return 0;
+}
+
+/**
+ * Returns the number of POVs registered with the given joystick.
+ * \note This will only return the value supported by the protocol, to get
+ *       the actual value, use the \c getRealNumPOVs() function
+ */
+int DriverStation::getNumPOVs (int joystick)
+{
+    if (joysticks()->count() > joystick)
+        return joysticks()->at (joystick)->numPOVs;
+
+    return 0;
+}
+
+/**
+ * Returns the number of buttons registered with the given joystick.
+ * \note This will only return the value supported by the protocol, to get
+ *       the actual value, use the \c getRealNumButtons() function
+ */
+int DriverStation::getNumButtons (int joystick)
+{
+    if (joysticks()->count() > joystick)
+        return joysticks()->at (joystick)->numButtons;
+
+    return 0;
+}
+
+/**
+ * Returns the number of axes registered with the given joystick, this value
+ * can be greater than what the protocol supports. If you are interested
+ * in getting only the number of axes used by the DS, use the \c getNumAxes()
+ * function.
+ */
+int DriverStation::getRealNumAxes (int joystick)
+{
+    if (joysticks()->count() > joystick)
+        return joysticks()->at (joystick)->realNumAxes;
+
+    return 0;
+}
+
+/**
+ * Returns the number of POVs registered with the given joystick, this value
+ * can be greater than what the protocol supports. If you are interested
+ * in getting only the number of POVs used by the DS, use the \c getNumPOVs()
+ * function.
+ */
+int DriverStation::getRealNumPOVs (int joystick)
+{
+    if (joysticks()->count() > joystick)
+        return joysticks()->at (joystick)->realNumPOVs;
+
+    return 0;
+}
+
+/**
+ * Returns the number of buttons registered with the given joystick, this value
+ * can be greater than what the protocol supports. If you are interested
+ * in getting only the number of buttons used by the DS, use the
+ * \c getNumButtons() function.
+ */
+int DriverStation::getRealNumButtons (int joystick)
+{
+    if (joysticks()->count() > joystick)
+        return joysticks()->at (joystick)->realNumButtons;
+
+    return 0;
+}
+
+/**
  * Returns the current number of joysticks registered with the DS.
  */
 int DriverStation::joystickCount()
@@ -333,7 +415,7 @@ JoystickList* DriverStation::joysticks()
 /**
  * Returns the current alliance (red or blue) of the robot.
  */
-DS_Common::Alliance DriverStation::alliance() const
+DS::Alliance DriverStation::alliance() const
 {
     return config()->alliance();
 }
@@ -341,7 +423,7 @@ DS_Common::Alliance DriverStation::alliance() const
 /**
  * Returns the current position (1, 2 or 3) of the robot.
  */
-DS_Common::Position DriverStation::position() const
+DS::Position DriverStation::position() const
 {
     return config()->position();
 }
@@ -349,7 +431,7 @@ DS_Common::Position DriverStation::position() const
 /**
  * Returns the current control mode (test, auto or teleop) of the robot.
  */
-DS_Common::ControlMode DriverStation::controlMode() const
+DS::ControlMode DriverStation::controlMode() const
 {
     return config()->controlMode();
 }
@@ -357,7 +439,7 @@ DS_Common::ControlMode DriverStation::controlMode() const
 /**
  * Returns the current client/FMS communication status.
  */
-DS_Common::CommStatus DriverStation::fmsCommStatus() const
+DS::CommStatus DriverStation::fmsCommStatus() const
 {
     return config()->fmsCommStatus();
 }
@@ -365,7 +447,7 @@ DS_Common::CommStatus DriverStation::fmsCommStatus() const
 /**
  * Returns the current enable status of the robot.
  */
-DS_Common::EnableStatus DriverStation::enableStatus() const
+DS::EnableStatus DriverStation::enableStatus() const
 {
     return config()->enableStatus();
 }
@@ -373,7 +455,7 @@ DS_Common::EnableStatus DriverStation::enableStatus() const
 /**
  * Returns the current radio/FMS communication status.
  */
-DS_Common::CommStatus DriverStation::radioCommStatus() const
+DS::CommStatus DriverStation::radioCommStatus() const
 {
     return config()->radioCommStatus();
 }
@@ -381,7 +463,7 @@ DS_Common::CommStatus DriverStation::radioCommStatus() const
 /**
  * Returns the current robot/FMS communication status.
  */
-DS_Common::CommStatus DriverStation::robotCommStatus() const
+DS::CommStatus DriverStation::robotCommStatus() const
 {
     return config()->robotCommStatus();
 }
@@ -389,7 +471,7 @@ DS_Common::CommStatus DriverStation::robotCommStatus() const
 /**
  * Returns the current status of the robot code
  */
-DS_Common::CodeStatus DriverStation::robotCodeStatus() const
+DS::CodeStatus DriverStation::robotCodeStatus() const
 {
     return config()->robotCodeStatus();
 }
@@ -397,7 +479,7 @@ DS_Common::CodeStatus DriverStation::robotCodeStatus() const
 /**
  * Returns the current voltage status (normal or brownout) of the robot.
  */
-DS_Common::VoltageStatus DriverStation::voltageStatus() const
+DS::VoltageStatus DriverStation::voltageStatus() const
 {
     return config()->voltageStatus();
 }
@@ -457,10 +539,10 @@ QString DriverStation::generalStatus() const
     }
 
     switch (enableStatus()) {
-    case kRobotEnabled:
+    case kEnabled:
         enabled = tr ("Enabled");
         break;
-    case kRobotDisabled:
+    case kDisabled:
         enabled = tr ("Disabled");
         break;
     }
@@ -510,7 +592,7 @@ QString DriverStation::defaultRobotAddress() const
 /**
  * Returns the current operation status of the robot (normal or e-stop).
  */
-DS_Common::OperationStatus DriverStation::operationStatus() const
+DS::OperationStatus DriverStation::operationStatus() const
 {
     return config()->operationStatus();
 }
@@ -566,7 +648,12 @@ bool DriverStation::registerJoystick (const int& axes,
     else {
         Joystick* joystick = new Joystick;
 
-        /* Set number of axes, buttons and POVs according to protocol requirements */
+        /* Register given number of axes, buttons and POVs */
+        joystick->realNumAxes = axes;
+        joystick->realNumPOVs = povs;
+        joystick->realNumButtons = buttons;
+
+        /* Set number of axes, buttons and POVs according to protocol needs */
         joystick->numAxes = qMin (axes, maxAxisCount());
         joystick->numPOVs = qMin (povs, maxPOVCount());
         joystick->numButtons = qMin (buttons, maxButtonCount());
@@ -596,13 +683,20 @@ bool DriverStation::registerJoystick (const int& axes,
  */
 void DriverStation::init()
 {
-    resetFMS();
-    resetRadio();
-    resetRobot();
-    sendFMSPacket();
-    sendRadioPacket();
-    sendRobotPacket();
-    emit statusChanged (generalStatus());
+    if (!m_init) {
+        m_init = true;
+
+        resetFMS();
+        resetRadio();
+        resetRobot();
+        sendFMSPacket();
+        sendRadioPacket();
+        sendRobotPacket();
+
+        emit statusChanged (generalStatus());
+        QTimer::singleShot (200, Qt::PreciseTimer,
+                            this, SIGNAL (initialized()));
+    }
 }
 
 /**
@@ -619,7 +713,7 @@ void DriverStation::rebootRobot()
  */
 void DriverStation::enableRobot()
 {
-    setEnabled (kRobotEnabled);
+    setEnabled (kEnabled);
 }
 
 /**
@@ -627,7 +721,7 @@ void DriverStation::enableRobot()
  */
 void DriverStation::disableRobot()
 {
-    setEnabled (kRobotDisabled);
+    setEnabled (kDisabled);
 }
 
 /**
@@ -741,27 +835,27 @@ void DriverStation::setTeamStation (const int& station)
     switch ((TeamStation) station) {
     case kRed1:
         setPosition (kPosition1);
-        setAlliance (kRedAlliance);
+        setAlliance (kAllianceRed);
         break;
     case kRed2:
         setPosition (kPosition2);
-        setAlliance (kRedAlliance);
+        setAlliance (kAllianceRed);
         break;
     case kRed3:
         setPosition (kPosition3);
-        setAlliance (kRedAlliance);
+        setAlliance (kAllianceRed);
         break;
     case kBlue1:
         setPosition (kPosition1);
-        setAlliance (kBlueAlliance);
+        setAlliance (kAllianceBlue);
         break;
     case kBlue2:
         setPosition (kPosition2);
-        setAlliance (kBlueAlliance);
+        setAlliance (kAllianceBlue);
         break;
     case kBlue3:
         setPosition (kPosition3);
-        setAlliance (kBlueAlliance);
+        setAlliance (kAllianceBlue);
         break;
     }
 }
@@ -957,8 +1051,8 @@ void DriverStation::resetRobot()
         protocol()->onRobotWatchdogExpired();
 
     config()->updateVoltage (0);
-    config()->updateEnabled (kRobotDisabled);
-    config()->updateOperationStatus (kNormal);
+    config()->updateEnabled (kDisabled);
+    config()->updateOperationStatus (kOperationNormal);
     config()->updateRobotCodeStatus (kCodeFailing);
     config()->updateVoltageStatus (kVoltageNormal);
     config()->updateRobotCommStatus (kCommsFailing);
@@ -1041,9 +1135,9 @@ void DriverStation::reconfigureJoysticks()
     resetJoysticks();
 
     foreach (Joystick* joystick, list) {
-        registerJoystick (joystick->numAxes,
-                          joystick->numButtons,
-                          joystick->numPOVs);
+        registerJoystick (joystick->realNumAxes,
+                          joystick->realNumButtons,
+                          joystick->realNumPOVs);
     }
 }
 

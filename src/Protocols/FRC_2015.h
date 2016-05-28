@@ -35,8 +35,8 @@ public:
     virtual void onRobotWatchdogExpired();
 
     /* Information regarding socket types */
-    virtual DS_Common::SocketType fmsSocketType();
-    virtual DS_Common::SocketType robotSocketType();
+    virtual DS::SocketType fmsSocketType();
+    virtual DS::SocketType robotSocketType();
 
     /* Default addresses */
     virtual QString defaultRadioAddress();
@@ -54,14 +54,14 @@ protected:
     virtual QByteArray getTimezoneData();
     virtual QByteArray getJoystickData();
 
-    virtual DS_Common::Alliance getAlliance (quint8 station);
-    virtual DS_Common::Position getPosition (quint8 station);
+    virtual DS::Alliance getAlliance (quint8 station);
+    virtual DS::Position getPosition (quint8 station);
 
     virtual uint getControlCode();
     virtual uint getRequestCode();
     virtual uint getFMSControlCode();
     virtual uint getTeamStationCode();
-    virtual uint getJoystickSize (const DS_Common::Joystick& joystick);
+    virtual uint getJoystickSize (const DS::Joystick& joystick);
 
 private:
     bool m_restartCode;

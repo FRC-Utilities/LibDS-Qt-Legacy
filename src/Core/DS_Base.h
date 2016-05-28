@@ -11,20 +11,31 @@
 
 #include <Core/DS_Common.h>
 
-class DS_Base : public DS_Common
+class DS_Base : public DS
 {
     Q_OBJECT
 
 signals:
     /**
+     * Emitted when the elapsed time since the robot has been enabled is
+     * changed
+     */
+    void elapsedTimeChanged (int msecs);
+
+    /**
+     * Emitted when the elapsed time is calculated again
+     */
+    void elapsedTimeChanged (QString string);
+
+    /**
      * Emitted when the robot or DS status is changed
      */
-    void statusChanged (QString statusChanged);
+    void statusChanged (QString status);
 
     /**
      * Emitted when the robot is enabled or disabled
      */
-    void enabledChanged (EnableStatus statusChanged);
+    void enabledChanged (EnableStatus status);
 
     /**
      * Emitted when the team alliance is changed (be it by client or FMS)

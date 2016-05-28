@@ -29,6 +29,6 @@ QStringList FRC_2016::defaultRobotAddresses()
     list.append (QString ("roboRIO-%1-FRC.local").arg (config()->team()));
     list.append (QString ("roboRIO-%1.local").arg (config()->team()));
     list.append (QString ("172.22.11.2"));
-    list.append (DS_Common::getStaticIP (10, config()->team(), 2));
+    list.append (DS::getStaticIP (10, config()->team(), 2));
     return list;
 }

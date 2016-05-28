@@ -140,17 +140,17 @@ void FRC_2015::onRobotWatchdogExpired()
 /**
  * FMS communications work with UDP datagrams
  */
-DS_Common::SocketType FRC_2015::fmsSocketType()
+DS::SocketType FRC_2015::fmsSocketType()
 {
-    return DS_Common::kUdpSocket;
+    return DS::kSocketTypeUDP;
 }
 
 /**
  * Robot communications work with UDP datagrams
  */
-DS_Common::SocketType FRC_2015::robotSocketType()
+DS::SocketType FRC_2015::robotSocketType()
 {
-    return DS_Common::kUdpSocket;
+    return DS::kSocketTypeUDP;
 }
 
 /**
@@ -158,7 +158,7 @@ DS_Common::SocketType FRC_2015::robotSocketType()
  */
 QString FRC_2015::defaultRadioAddress()
 {
-    return DS_Common::getStaticIP (10, config()->team(), 1);
+    return DS::getStaticIP (10, config()->team(), 1);
 }
 
 /**
@@ -172,7 +172,7 @@ QStringList FRC_2015::defaultRobotAddresses()
     QStringList list;
     list.append (QString ("roboRIO-%1.local").arg (config()->team()));
     list.append (QString ("172.22.11.2"));
-    list.append (DS_Common::getStaticIP (10, config()->team(), 2));
+    list.append (DS::getStaticIP (10, config()->team(), 2));
     return list;
 }
 
@@ -227,13 +227,13 @@ bool FRC_2015::interpretFMSPacket (const QByteArray& data)
         config()->setEnabled (control & OP_MODE_ENABLED);
 
         /* Get FMS robot mode */
-        DS_Common::ControlMode mode;
+        DS::ControlMode mode;
         if (control & OP_MODE_TELEOPERATED)
-            mode = DS_Common::kControlTeleoperated;
+            mode = DS::kControlTeleoperated;
         else if (control & OP_MODE_AUTONOMOUS)
-            mode = DS_Common::kControlAutonomous;
+            mode = DS::kControlAutonomous;
         else if (control & OP_MODE_TEST)
-            mode = DS_Common::kControlTest;
+            mode = DS::kControlTest;
 
         /* Update robot mode */
         config()->updateControlMode (mode);
@@ -324,9 +324,9 @@ QByteArray FRC_2015::getTimezoneData()
     data.append (date.year() - 1900);
 
     /* Add timezone data */
-    data.append (DS_Common::timezone().length() + 1);
+    data.append (DS::timezone().length() + 1);
     data.append (DS_TAG_TIMEZONE);
-    data.append (DS_Common::timezone());
+    data.append (DS::timezone());
 
     return data;
 }
@@ -389,32 +389,32 @@ QByteArray FRC_2015::getJoystickData()
  * code. This function is used to follow the instructions outlined by the
  * FMS packets.
  */
-DS_Common::Alliance FRC_2015::getAlliance (quint8 station)
+DS::Alliance FRC_2015::getAlliance (quint8 station)
 {
     if (station == STATION_BLUE_1
         || station == STATION_BLUE_2
         || station == STATION_BLUE_3)
-        return DS_Common::kBlueAlliance;
+        return DS::kAllianceBlue;
 
-    return DS_Common::kRedAlliance;
+    return DS::kAllianceRed;
 }
 
 /**
  * This function returns the position referenced by the given \a station code.
  * This function is used to follow the instructions outlined by the FMS packets.
  */
-DS_Common::Position FRC_2015::getPosition (quint8 station)
+DS::Position FRC_2015::getPosition (quint8 station)
 {
     if (station == STATION_RED_1 || station == STATION_BLUE_1)
-        return DS_Common::kPosition1;
+        return DS::kPosition1;
 
     if (station == STATION_RED_2 || station == STATION_BLUE_2)
-        return DS_Common::kPosition2;
+        return DS::kPosition2;
 
     if (station == STATION_RED_3 || station == STATION_BLUE_3)
-        return DS_Common::kPosition3;
+        return DS::kPosition3;
 
-    return DS_Common::kPosition1;
+    return DS::kPosition1;
 }
 
 /**
@@ -430,13 +430,13 @@ uint FRC_2015::getControlCode()
     uint code = 0;
 
     switch (config()->controlMode()) {
-    case DS_Common::kControlTest:
+    case DS::kControlTest:
         code |= OP_MODE_TEST;
         break;
-    case DS_Common::kControlAutonomous:
+    case DS::kControlAutonomous:
         code |= OP_MODE_AUTONOMOUS;
         break;
-    case DS_Common::kControlTeleoperated:
+    case DS::kControlTeleoperated:
         code |= OP_MODE_TELEOPERATED;
         break;
     default:
@@ -494,13 +494,13 @@ uint FRC_2015::getFMSControlCode()
     uint code = 0;
 
     switch (config()->controlMode()) {
-    case DS_Common::kControlTest:
+    case DS::kControlTest:
         code |= OP_MODE_TEST;
         break;
-    case DS_Common::kControlAutonomous:
+    case DS::kControlAutonomous:
         code |= OP_MODE_AUTONOMOUS;
         break;
-    case DS_Common::kControlTeleoperated:
+    case DS::kControlTeleoperated:
         code |= OP_MODE_TELEOPERATED;
         break;
     default:
@@ -531,22 +531,22 @@ uint FRC_2015::getFMSControlCode()
  */
 uint FRC_2015::getTeamStationCode()
 {
-    if (config()->position() == DS_Common::kPosition1) {
-        if (config()->alliance() == DS_Common::kRedAlliance)
+    if (config()->position() == DS::kPosition1) {
+        if (config()->alliance() == DS::kAllianceRed)
             return STATION_RED_1;
         else
             return STATION_BLUE_1;
     }
 
-    if (config()->position() == DS_Common::kPosition2) {
-        if (config()->alliance() == DS_Common::kRedAlliance)
+    if (config()->position() == DS::kPosition2) {
+        if (config()->alliance() == DS::kAllianceRed)
             return STATION_RED_2;
         else
             return STATION_BLUE_2;
     }
 
-    if (config()->position() == DS_Common::kPosition3) {
-        if (config()->alliance() == DS_Common::kRedAlliance)
+    if (config()->position() == DS::kPosition3) {
+        if (config()->alliance() == DS::kAllianceRed)
             return STATION_RED_3;
         else
             return STATION_BLUE_3;
@@ -562,7 +562,7 @@ uint FRC_2015::getTeamStationCode()
  * This information will help the robot decide where a information starts and
  * ends for each attached joystick.
  */
-uint FRC_2015::getJoystickSize(const DS_Common::Joystick& joystick)
+uint FRC_2015::getJoystickSize(const DS::Joystick& joystick)
 {
     return  5
             + (joystick.numAxes > 0 ? joystick.numAxes : 0)

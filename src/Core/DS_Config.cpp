@@ -16,16 +16,19 @@ DS_Config::DS_Config()
     m_libVersion = "";
     m_pcmVersion = "";
     m_pdpVersion = "";
-    m_alliance = kRedAlliance;
+    m_timerEnabled = false;
     m_position = kPosition1;
+    m_alliance = kAllianceRed;
     m_codeStatus = kCodeFailing;
-    m_operationStatus = kNormal;
+    m_operationStatus = kOperationNormal;
     m_fmsCommStatus = kCommsFailing;
-    m_enableStatus = kRobotDisabled;
+    m_enableStatus = kDisabled;
     m_voltageStatus = kVoltageNormal;
     m_radioCommStatus = kCommsFailing;
     m_robotCommStatus = kCommsFailing;
     m_controlMode = kControlTeleoperated;
+
+    updateElapsedTime();
 }
 
 DS_Config* DS_Config::getInstance()
@@ -46,22 +49,22 @@ float DS_Config::voltage() const
 
 bool DS_Config::isEnabled() const
 {
-    return enableStatus() == DS_Common::kRobotEnabled;
+    return enableStatus() == DS::kEnabled;
 }
 
-DS_Common::Alliance DS_Config::alliance() const
+DS::Alliance DS_Config::alliance() const
 {
     return m_alliance;
 }
 
-DS_Common::Position DS_Config::position() const
+DS::Position DS_Config::position() const
 {
     return m_position;
 }
 
 bool DS_Config::isFMSAttached() const
 {
-    return fmsCommStatus() == DS_Common::kCommsWorking;
+    return fmsCommStatus() == DS::kCommsWorking;
 }
 
 QString DS_Config::libVersion() const
@@ -81,60 +84,60 @@ QString DS_Config::pdpVersion() const
 
 bool DS_Config::isEmergencyStopped() const
 {
-    return operationStatus() == DS_Common::kEmergencyStop;
+    return operationStatus() == DS::kOperationEmergencyStop;
 }
 
 bool DS_Config::isRobotCodeRunning() const
 {
-    return robotCodeStatus() == DS_Common::kCodeRunning;
+    return robotCodeStatus() == DS::kCodeRunning;
 }
 
 bool DS_Config::isConnectedToRadio() const
 {
-    return radioCommStatus() == DS_Common::kCommsWorking;
+    return radioCommStatus() == DS::kCommsWorking;
 }
 
 bool DS_Config::isConnectedToRobot() const
 {
-    return robotCommStatus() == DS_Common::kCommsWorking;
+    return robotCommStatus() == DS::kCommsWorking;
 }
 
-DS_Common::ControlMode DS_Config::controlMode() const
+DS::ControlMode DS_Config::controlMode() const
 {
     return m_controlMode;
 }
 
-DS_Common::CommStatus DS_Config::fmsCommStatus() const
+DS::CommStatus DS_Config::fmsCommStatus() const
 {
     return m_fmsCommStatus;
 }
 
-DS_Common::EnableStatus DS_Config::enableStatus() const
+DS::EnableStatus DS_Config::enableStatus() const
 {
     return m_enableStatus;
 }
 
-DS_Common::CommStatus DS_Config::radioCommStatus() const
+DS::CommStatus DS_Config::radioCommStatus() const
 {
     return m_radioCommStatus;
 }
 
-DS_Common::CommStatus DS_Config::robotCommStatus() const
+DS::CommStatus DS_Config::robotCommStatus() const
 {
     return m_robotCommStatus;
 }
 
-DS_Common::CodeStatus DS_Config::robotCodeStatus() const
+DS::CodeStatus DS_Config::robotCodeStatus() const
 {
     return m_codeStatus;
 }
 
-DS_Common::VoltageStatus DS_Config::voltageStatus() const
+DS::VoltageStatus DS_Config::voltageStatus() const
 {
     return m_voltageStatus;
 }
 
-DS_Common::OperationStatus DS_Config::operationStatus() const
+DS::OperationStatus DS_Config::operationStatus() const
 {
     return m_operationStatus;
 }
@@ -149,16 +152,16 @@ void DS_Config::updateTeam (const int& team)
 
 void DS_Config::setRobotCode (const bool& code)
 {
-    DS_Common::CodeStatus status = DS_Common::kCodeFailing;
-    if (code) status = DS_Common::kCodeRunning;
+    DS::CodeStatus status = DS::kCodeFailing;
+    if (code) status = DS::kCodeRunning;
 
     updateRobotCodeStatus (status);
 }
 
 void DS_Config::setEnabled (const bool& enabled)
 {
-    DS_Common::EnableStatus status = DS_Common::kRobotDisabled;
-    if (enabled) status = DS_Common::kRobotEnabled;
+    DS::EnableStatus status = DS::kDisabled;
+    if (enabled) status = DS::kEnabled;
 
     updateEnabled (status);
 }
@@ -170,16 +173,16 @@ void DS_Config::updateCpuUsage (const int& usage)
 
 void DS_Config::setBrownout (const bool& brownout)
 {
-    DS_Common::VoltageStatus status = DS_Common::kVoltageNormal;
-    if (brownout) status = DS_Common::kVoltageBrownout;
+    DS::VoltageStatus status = DS::kVoltageNormal;
+    if (brownout) status = DS::kVoltageBrownout;
 
     updateVoltageStatus (status);
 }
 
 void DS_Config::setEmergencyStop (const bool& estop)
 {
-    DS_Common::OperationStatus status = DS_Common::kNormal;
-    if (estop) status = DS_Common::kEmergencyStop;
+    DS::OperationStatus status = DS::kOperationNormal;
+    if (estop) status = DS::kOperationEmergencyStop;
 
     updateOperationStatus (status);
 }
@@ -265,6 +268,15 @@ void DS_Config::updateEnabled (const EnableStatus& status)
 {
     if (m_enableStatus != status) {
         m_enableStatus = status;
+
+        if (status == DS::kEnabled) {
+            m_timer.restart();
+            m_timerEnabled = true;
+        }
+
+        else
+            m_timerEnabled = false;
+
         emit enabledChanged (m_enableStatus);
         emit statusChanged (DriverStation::getInstance()->generalStatus());
     }
@@ -322,4 +334,25 @@ void DS_Config::updateOperationStatus (const OperationStatus& status)
         emit operationStatusChanged (m_operationStatus);
         emit statusChanged (DriverStation::getInstance()->generalStatus());
     }
+}
+
+void DS_Config::updateElapsedTime()
+{
+    if (m_timerEnabled && isConnectedToRobot() && !isEmergencyStopped()) {
+        quint32 msec = m_timer.elapsed();
+        quint32 secs = (msec / 1000);
+        quint32 mins = (secs / 60) % 60;
+
+        secs = secs % 60;
+        msec = msec % 1000;
+
+        emit elapsedTimeChanged (msec);
+        emit elapsedTimeChanged (QString ("%1:%2.%3")
+                                 .arg (mins, 2, 10, QLatin1Char ('0'))
+                                 .arg (secs, 2, 10, QLatin1Char ('0'))
+                                 .arg (QString::number (msec).at (0)));
+    }
+
+    QTimer::singleShot (100, Qt::PreciseTimer,
+                        this, SLOT (updateElapsedTime()));
 }

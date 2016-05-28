@@ -249,9 +249,9 @@ public:
      * \note We recommend you to redefine this function in your protocol to
      *       avoid breaking it if the core library is changed.
      */
-    virtual DS_Common::SocketType fmsSocketType()
+    virtual DS::SocketType fmsSocketType()
     {
-        return DS_Common::kUdpSocket;
+        return DS::kSocketTypeUDP;
     }
 
     /**
@@ -263,9 +263,9 @@ public:
      * \note We recommend you to redefine this function in your protocol to
      *       avoid breaking it if the core library is changed.
      */
-    virtual DS_Common::SocketType radioSocketType()
+    virtual DS::SocketType radioSocketType()
     {
-        return DS_Common::kUdpSocket;
+        return DS::kSocketTypeUDP;
     }
 
     /**
@@ -277,9 +277,9 @@ public:
      * \note We recommend you to redefine this function in your protocol to
      *       avoid breaking it if the core library is changed.
      */
-    virtual DS_Common::SocketType robotSocketType()
+    virtual DS::SocketType robotSocketType()
     {
-        return DS_Common::kUdpSocket;
+        return DS::kSocketTypeUDP;
     }
 
     /**
@@ -347,7 +347,7 @@ public:
     {
         ++m_receivedFmsPackets;
         if (interpretFMSPacket (data))
-            config()->updateFMSCommStatus (DS_Common::kCommsWorking);
+            config()->updateFMSCommStatus (DS::kCommsWorking);
     }
 
     /**
@@ -358,7 +358,7 @@ public:
     {
         ++m_receivedRadioPackets;
         if (interpretRadioPacket (data))
-            config()->updateRadioCommStatus (DS_Common::kCommsWorking);
+            config()->updateRadioCommStatus (DS::kCommsWorking);
     }
 
     /**
@@ -369,7 +369,7 @@ public:
     {
         ++m_receivedRobotPackets;
         if (interpretRobotPacket (data))
-            config()->updateRobotCommStatus (DS_Common::kCommsWorking);
+            config()->updateRobotCommStatus (DS::kCommsWorking);
     }
 
     /**

@@ -15,7 +15,7 @@
  * This class is used in the DS in order to be able to use both TCP and UDP
  * sockets to send and receive data from the robot.
  */
-ConfigurableSocket::ConfigurableSocket (const DS_Common::SocketType& type)
+ConfigurableSocket::ConfigurableSocket (const DS::SocketType& type)
 {
     m_socketType = type;
     connect (socket(), SIGNAL (readyRead()), this, SIGNAL (readyRead()));
@@ -27,7 +27,7 @@ ConfigurableSocket::ConfigurableSocket (const DS_Common::SocketType& type)
  */
 QByteArray ConfigurableSocket::readAll()
 {
-    if (socketType() == DS_Common::kTcpSocket)
+    if (socketType() == DS::kSocketTypeTCP)
         return tcpSocket()->readAll();
 
     QByteArray buf;
@@ -75,7 +75,7 @@ QUdpSocket* ConfigurableSocket::udpSocket()
  */
 QAbstractSocket* ConfigurableSocket::socket()
 {
-    if (socketType() == DS_Common::kTcpSocket)
+    if (socketType() == DS::kSocketTypeTCP)
         return &m_tcpSocket;
 
     return &m_udpSocket;
@@ -85,7 +85,7 @@ QAbstractSocket* ConfigurableSocket::socket()
  * Returns the type of socket used. This function allows us to determine if
  * the socket is a TCP socket or an UDP socket.
  */
-DS_Common::SocketType ConfigurableSocket::socketType() const
+DS::SocketType ConfigurableSocket::socketType() const
 {
     return m_socketType;
 }
@@ -119,10 +119,10 @@ qint64 ConfigurableSocket::writeDatagram (const QByteArray& data,
 qint64 ConfigurableSocket::writeDatagram (const QByteArray& data,
                                           const QHostAddress& ip, quint16 port)
 {
-    if (socketType() == DS_Common::kUdpSocket)
+    if (socketType() == DS::kSocketTypeUDP)
         return m_udpSocket.writeDatagram (data, ip, port);
 
-    if (socketType() == DS_Common::kTcpSocket)
+    if (socketType() == DS::kSocketTypeTCP)
         return m_tcpSocket.write (data);
 
     return -1;
@@ -186,7 +186,7 @@ void ConfigurableSocket::connectToHost (const QHostAddress& host,
                                         quint16 port,
                                         QIODevice::OpenMode mode)
 {
-    if (socketType() == DS_Common::kTcpSocket) {
+    if (socketType() == DS::kSocketTypeTCP) {
         if (m_tcpSocket.state() != QAbstractSocket::UnconnectedState)
             m_tcpSocket.disconnectFromHost();
 
