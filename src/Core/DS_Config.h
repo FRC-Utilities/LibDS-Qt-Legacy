@@ -27,43 +27,19 @@ class DS_Config : public DS_Base
 public:
     static DS_Config* getInstance();
 
-    bool isEnabled() const
-    {
-        return enableStatus() == DS_Common::kRobotEnabled;
-    }
-
-    bool isConnectedToRadio() const
-    {
-        return radioCommStatus() == DS_Common::kCommsWorking;
-    }
-
-    bool isConnectedToRobot() const
-    {
-        return robotCommStatus() == DS_Common::kCommsWorking;
-    }
-
-    bool isFMSAttached() const
-    {
-        return fmsCommStatus() == DS_Common::kCommsWorking;
-    }
-
-    bool isEmergencyStopped() const
-    {
-        return operationStatus() == DS_Common::kEmergencyStop;
-    }
-
-    bool isRobotCodeRunning() const
-    {
-        return robotCodeStatus() == DS_Common::kCodeRunning;
-    }
-
     int team() const;
     float voltage() const;
+    bool isEnabled() const;
     Alliance alliance() const;
     Position position() const;
+    bool isFMSAttached() const;
     QString libVersion() const;
     QString pcmVersion() const;
     QString pdpVersion() const;
+    bool isEmergencyStopped() const;
+    bool isRobotCodeRunning() const;
+    bool isConnectedToRadio() const;
+    bool isConnectedToRobot() const;
     ControlMode controlMode() const;
     CommStatus fmsCommStatus() const;
     EnableStatus enableStatus() const;
@@ -75,55 +51,27 @@ public:
 
 public slots:
     void updateTeam (const int& team);
+    void setRobotCode (const bool& code);
+    void setEnabled (const bool& enabled);
     void updateCpuUsage (const int& usage);
+    void setBrownout (const bool& brownout);
+    void setEmergencyStop (const bool& estop);
     void updateVoltage (const float& voltage);
-    void updateEnable (const EnableStatus& statusChanged);
     void updateAlliance (const Alliance& alliance);
     void updatePosition (const Position& position);
     void updateLibVersion (const QString& version);
     void updatePcmVersion (const QString& version);
     void updatePdpVersion (const QString& version);
     void updateControlMode (const ControlMode& mode);
+    void updateEnabled (const EnableStatus& statusChanged);
+    void updateRamUsage (const int& usage, const int& total);
+    void updateDiskUsage (const int& usage, const int& total);
     void updateFMSCommStatus (const CommStatus& statusChanged);
     void updateRadioCommStatus (const CommStatus& statusChanged);
     void updateRobotCommStatus (const CommStatus& statusChanged);
     void updateRobotCodeStatus (const CodeStatus& statusChanged);
     void updateVoltageStatus (const VoltageStatus& statusChanged);
-    void updateRamUsage (const int& usage, const int& total);
-    void updateDiskUsage (const int& usage, const int& total);
     void updateOperationStatus (const OperationStatus& statusChanged);
-
-    void setEmergencyStop (const bool& estop)
-    {
-        DS_Common::OperationStatus status = DS_Common::kNormal;
-        if (estop) status = DS_Common::kEmergencyStop;
-
-        updateOperationStatus (status);
-    }
-
-    void setEnabled (const bool& enabled)
-    {
-        DS_Common::EnableStatus status = DS_Common::kRobotDisabled;
-        if (enabled) status = DS_Common::kRobotEnabled;
-
-        updateEnable (status);
-    }
-
-    void setRobotCode (const bool& code)
-    {
-        DS_Common::CodeStatus status = DS_Common::kCodeFailing;
-        if (code) status = DS_Common::kCodeRunning;
-
-        updateRobotCodeStatus (status);
-    }
-
-    void setBrownout (const bool& brownout)
-    {
-        DS_Common::VoltageStatus status = DS_Common::kVoltageNormal;
-        if (brownout) status = DS_Common::kVoltageBrownout;
-
-        updateVoltageStatus (status);
-    }
 
 protected:
     DS_Config();

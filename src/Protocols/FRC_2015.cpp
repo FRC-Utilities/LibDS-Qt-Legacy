@@ -224,9 +224,7 @@ bool FRC_2015::interpretFMSPacket (const QByteArray& data)
         quint8 station = data.at (5);
 
         /* Change robot enabled state based on what FMS tells us to do*/
-        config()->updateEnable((control & OP_MODE_ENABLED) ?
-                               DS_Common::kRobotEnabled :
-                               DS_Common::kRobotDisabled);
+        config()->setEnabled (control & OP_MODE_ENABLED);
 
         /* Get FMS robot mode */
         DS_Common::ControlMode mode;
@@ -259,7 +257,6 @@ bool FRC_2015::interpretFMSPacket (const QByteArray& data)
  *   - If the robot is emergency stopped
  *   - If the robot is experiencing a voltage brownout
  */
-#include <qdebug.h>
 bool FRC_2015::interpretRobotPacket (const QByteArray& data)
 {
     /* Packet is invalid */

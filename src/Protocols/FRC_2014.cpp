@@ -286,15 +286,10 @@ bool FRC_2014::interpretRobotPacket (const QByteArray& data)
     if (opcode == ESTOP_ON && !config()->isEmergencyStopped())
         config()->updateOperationStatus (DS_Common::kEmergencyStop);
 
-    /* Get robot code status */
-    DS_Common::CodeStatus status = DS_Common::kCodeFailing;
-    if ((integer != 0x37) && (decimal != 0x37))
-        status = DS_Common::kCodeRunning;
-
     /* Update code status & voltage */
-    config()->updateRobotCodeStatus (status);
-    config()->updateVoltage (config()->isRobotCodeRunning() ?
-                             voltage.toFloat() : 0);
+    bool hasCode = (integer != 0x37) && (decimal != 0x37);
+    config()->setRobotCode (hasCode);
+    config()->updateVoltage (hasCode ? voltage.toFloat() : 0);
 
     /* Packet read successfully */
     return true;
@@ -363,10 +358,10 @@ quint8 FRC_2014::getOperationCode()
     if (m_resync)
         code |= RESYNC;
 
-    if (config()->fmsCommStatus() == DS_Common::kCommsWorking)
+    if (config()->isFMSAttached())
         code |= FMS_ATTACHED;
 
-    if (config()->operationStatus() == DS_Common::kEmergencyStop)
+    if (config()->isEmergencyStopped())
         code = ESTOP_ON;
 
     if (m_rebootRobot)

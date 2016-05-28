@@ -853,7 +853,7 @@ void DriverStation::setCustomRadioAddress (const QString& address)
  */
 void DriverStation::setEnabled (const EnableStatus& status)
 {
-    config()->updateEnable (status);
+    config()->updateEnabled (status);
 }
 
 /**
@@ -955,7 +955,7 @@ void DriverStation::resetRobot()
         protocol()->onRobotWatchdogExpired();
 
     config()->updateVoltage (0);
-    config()->updateEnable (kRobotDisabled);
+    config()->updateEnabled (kRobotDisabled);
     config()->updateOperationStatus (kNormal);
     config()->updateRobotCodeStatus (kCodeFailing);
     config()->updateVoltageStatus (kVoltageNormal);

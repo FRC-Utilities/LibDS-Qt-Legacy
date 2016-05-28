@@ -9,9 +9,6 @@
 #include "DS_Config.h"
 #include "DriverStation.h"
 
-/**
- * Initializes all the internal values
- */
 DS_Config::DS_Config()
 {
     m_team = 0;
@@ -31,21 +28,12 @@ DS_Config::DS_Config()
     m_controlMode = kControlTeleoperated;
 }
 
-/**
- * Returns a pointer to the only instance of this class.
- * This class must use a single instance because both the \c DriverStation class
- * and the derived protocols use this class to store and change the internal
- * variables of the library.
- */
 DS_Config* DS_Config::getInstance()
 {
     static DS_Config instance;
     return &instance;
 }
 
-/**
- * Returns the current team number.
- */
 int DS_Config::team() const
 {
     return m_team;
@@ -56,6 +44,11 @@ float DS_Config::voltage() const
     return m_voltage;
 }
 
+bool DS_Config::isEnabled() const
+{
+    return enableStatus() == DS_Common::kRobotEnabled;
+}
+
 DS_Common::Alliance DS_Config::alliance() const
 {
     return m_alliance;
@@ -64,6 +57,11 @@ DS_Common::Alliance DS_Config::alliance() const
 DS_Common::Position DS_Config::position() const
 {
     return m_position;
+}
+
+bool DS_Config::isFMSAttached() const
+{
+    return fmsCommStatus() == DS_Common::kCommsWorking;
 }
 
 QString DS_Config::libVersion() const
@@ -79,6 +77,26 @@ QString DS_Config::pcmVersion() const
 QString DS_Config::pdpVersion() const
 {
     return m_pdpVersion;
+}
+
+bool DS_Config::isEmergencyStopped() const
+{
+    return operationStatus() == DS_Common::kEmergencyStop;
+}
+
+bool DS_Config::isRobotCodeRunning() const
+{
+    return robotCodeStatus() == DS_Common::kCodeRunning;
+}
+
+bool DS_Config::isConnectedToRadio() const
+{
+    return radioCommStatus() == DS_Common::kCommsWorking;
+}
+
+bool DS_Config::isConnectedToRobot() const
+{
+    return robotCommStatus() == DS_Common::kCommsWorking;
 }
 
 DS_Common::ControlMode DS_Config::controlMode() const
@@ -129,25 +147,48 @@ void DS_Config::updateTeam (const int& team)
     }
 }
 
+void DS_Config::setRobotCode (const bool& code)
+{
+    DS_Common::CodeStatus status = DS_Common::kCodeFailing;
+    if (code) status = DS_Common::kCodeRunning;
+
+    updateRobotCodeStatus (status);
+}
+
+void DS_Config::setEnabled (const bool& enabled)
+{
+    DS_Common::EnableStatus status = DS_Common::kRobotDisabled;
+    if (enabled) status = DS_Common::kRobotEnabled;
+
+    updateEnabled (status);
+}
+
 void DS_Config::updateCpuUsage (const int& usage)
 {
     emit cpuUsageChanged (usage);
 }
 
+void DS_Config::setBrownout (const bool& brownout)
+{
+    DS_Common::VoltageStatus status = DS_Common::kVoltageNormal;
+    if (brownout) status = DS_Common::kVoltageBrownout;
+
+    updateVoltageStatus (status);
+}
+
+void DS_Config::setEmergencyStop (const bool& estop)
+{
+    DS_Common::OperationStatus status = DS_Common::kNormal;
+    if (estop) status = DS_Common::kEmergencyStop;
+
+    updateOperationStatus (status);
+}
+
 void DS_Config::updateVoltage (const float& voltage)
 {
     if (m_voltage != voltage) {
-        m_voltage = ceilf (voltage * 100) / 100;
+        m_voltage = roundf (voltage * 100) / 100;
         emit voltageChanged (m_voltage);
-    }
-}
-
-void DS_Config::updateEnable (const EnableStatus& status)
-{
-    if (m_enableStatus != status) {
-        m_enableStatus = status;
-        emit enabledChanged (m_enableStatus);
-        emit statusChanged (DriverStation::getInstance()->generalStatus());
     }
 }
 
@@ -209,6 +250,25 @@ void DS_Config::updateControlMode (const ControlMode& mode)
     }
 }
 
+void DS_Config::updateEnabled (const EnableStatus& status)
+{
+    if (m_enableStatus != status) {
+        m_enableStatus = status;
+        emit enabledChanged (m_enableStatus);
+        emit statusChanged (DriverStation::getInstance()->generalStatus());
+    }
+}
+
+void DS_Config::updateRamUsage (const int& usage, const int& total)
+{
+    emit ramUsageChanged (usage, total);
+}
+
+void DS_Config::updateDiskUsage (const int& usage, const int& total)
+{
+    emit diskUsageChanged (usage, total);
+}
+
 void DS_Config::updateFMSCommStatus (const CommStatus& status)
 {
     if (m_fmsCommStatus != status) {
@@ -242,16 +302,6 @@ void DS_Config::updateVoltageStatus (const VoltageStatus& status)
         emit voltageStatusChanged (m_voltageStatus);
         emit statusChanged (DriverStation::getInstance()->generalStatus());
     }
-}
-
-void DS_Config::updateRamUsage (const int& usage, const int& total)
-{
-    emit ramUsageChanged (usage, total);
-}
-
-void DS_Config::updateDiskUsage (const int& usage, const int& total)
-{
-    emit diskUsageChanged (usage, total);
 }
 
 void DS_Config::updateOperationStatus (const OperationStatus& status)
