@@ -13,18 +13,25 @@
 #include <QUdpSocket>
 #include <Core/DS_Common.h>
 
-class ConfigurableSocket
+class ConfigurableSocket : public QObject
 {
+    Q_OBJECT
+
 public:
     explicit ConfigurableSocket (const DS_Common::SocketType& type);
 
-    QAbstractSocket* socket() const;
+    QByteArray readAll();
+    QString peerAddress();
+    QTcpSocket* tcpSocket();
+    QUdpSocket* udpSocket();
+    QAbstractSocket* socket();
     DS_Common::SocketType socketType() const;
 
     qint64 writeDatagram (const QByteArray& data, const QString& ip, quint16 port);
     qint64 writeDatagram (const QByteArray& data, const QHostAddress& ip,
                           quint16 port);
 
+public slots:
     void bind (const QString& ip, quint16 port, QAbstractSocket::BindMode mode);
     void bind (const QHostAddress& ip, quint16 port,
                QAbstractSocket::BindMode mode);
@@ -33,10 +40,13 @@ public:
     void connectToHost (const QHostAddress& host, quint16 port,
                         QIODevice::OpenMode mode);
 
+signals:
+    void readyRead();
+
 private:
+    QString m_peerAddress;
     QUdpSocket m_udpSocket;
     QTcpSocket m_tcpSocket;
-    QAbstractSocket* m_socket;
     DS_Common::SocketType m_socketType;
 };
 

@@ -18,12 +18,52 @@
 ConfigurableSocket::ConfigurableSocket (const DS_Common::SocketType& type)
 {
     m_socketType = type;
+    connect (socket(), SIGNAL (readyRead()), this, SIGNAL (readyRead()));
+}
 
-    if (socketType() == DS_Common::kUdpSocket)
-        m_socket = &m_udpSocket;
-
+/**
+ * Returns the received data on the socket using the implementations
+ * for each socket type.
+ */
+QByteArray ConfigurableSocket::readAll()
+{
     if (socketType() == DS_Common::kTcpSocket)
-        m_socket = &m_tcpSocket;
+        return tcpSocket()->readAll();
+
+    QByteArray buf;
+    QHostAddress address;
+
+    buf.resize (udpSocket()->pendingDatagramSize());
+    udpSocket()->readDatagram (buf.data(), buf.size(), &address);
+
+    if (peerAddress().isEmpty())
+        m_peerAddress = address.toString();
+
+    return buf;
+}
+
+/**
+ * Returns the peer address of the socket
+ */
+QString ConfigurableSocket::peerAddress()
+{
+    return m_peerAddress;
+}
+
+/**
+ * Returns a pointer to the TCP socket
+ */
+QTcpSocket* ConfigurableSocket::tcpSocket()
+{
+    return &m_tcpSocket;
+}
+
+/**
+ * Returns a pointer to the UDP socket
+ */
+QUdpSocket* ConfigurableSocket::udpSocket()
+{
+    return &m_udpSocket;
 }
 
 /**
@@ -33,9 +73,12 @@ ConfigurableSocket::ConfigurableSocket (const DS_Common::SocketType& type)
  *
  * Possible scenarios include reading the received data :)
  */
-QAbstractSocket* ConfigurableSocket::socket() const
+QAbstractSocket* ConfigurableSocket::socket()
 {
-    return m_socket;
+    if (socketType() == DS_Common::kTcpSocket)
+        return &m_tcpSocket;
+
+    return &m_udpSocket;
 }
 
 /**
@@ -112,6 +155,7 @@ void ConfigurableSocket::bind (const QString& ip, quint16 port,
 void ConfigurableSocket::bind (const QHostAddress& ip, quint16 port,
                                QAbstractSocket::BindMode mode)
 {
+    m_peerAddress = ip.toString();
     socket()->bind (ip, port, mode);
 }
 
@@ -145,6 +189,7 @@ void ConfigurableSocket::connectToHost (const QHostAddress& host,
     if (socketType() == DS_Common::kTcpSocket) {
         if (m_tcpSocket.state() != QAbstractSocket::UnconnectedState)
             m_tcpSocket.disconnectFromHost();
+
         m_tcpSocket.connectToHost (host, port, mode);
     }
 }

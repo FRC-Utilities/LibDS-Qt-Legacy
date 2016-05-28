@@ -259,6 +259,7 @@ bool FRC_2015::interpretFMSPacket (const QByteArray& data)
  *   - If the robot is emergency stopped
  *   - If the robot is experiencing a voltage brownout
  */
+#include <qdebug.h>
 bool FRC_2015::interpretRobotPacket (const QByteArray& data)
 {
     /* Packet is invalid */
@@ -289,8 +290,8 @@ bool FRC_2015::interpretRobotPacket (const QByteArray& data)
         config()->setEmergencyStop (false);
 
     /* Calculate the voltage */
-    config()->updateVoltage ((float) (integer + ((float) (decimal) * 99 / 255 /
-                                                 100)));
+    float voltage = (integer + ((float) (decimal) * 99 / 255 / 100));
+    config()->updateVoltage (voltage);
 
     return true;
 }

@@ -137,7 +137,7 @@ void DS_Config::updateCpuUsage (const int& usage)
 void DS_Config::updateVoltage (const float& voltage)
 {
     if (m_voltage != voltage) {
-        m_voltage = voltage;
+        m_voltage = ceilf (voltage * 100) / 100;
         emit voltageChanged (m_voltage);
     }
 }

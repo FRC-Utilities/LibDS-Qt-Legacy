@@ -372,7 +372,7 @@ void Sockets::setRobotSocketType (const DS_Common::SocketType& type)
 void Sockets::readFMSData()
 {
     if (m_fmsReceiver)
-        emit fmsPacketReceived (m_fmsReceiver->socket()->readAll());
+        emit fmsPacketReceived (m_fmsReceiver->readAll());
 }
 
 /**
@@ -383,7 +383,7 @@ void Sockets::readFMSData()
 void Sockets::readRadioData()
 {
     if (m_radioReceiver)
-        emit radioPacketReceived (m_radioReceiver->socket()->readAll());
+        emit radioPacketReceived (m_radioReceiver->readAll());
 }
 
 /**
@@ -396,14 +396,15 @@ void Sockets::readRadioData()
  */
 void Sockets::readRobotData()
 {
-    QAbstractSocket* socket = qobject_cast<QAbstractSocket*> (sender());
+    ConfigurableSocket* socket = qobject_cast<ConfigurableSocket*> (sender());
     QByteArray data = socket->readAll();
 
     if (robotIp().isEmpty() && !data.isEmpty())
-        setRobotIp (socket->peerAddress().toString());
+        setRobotIp (socket->peerAddress());
 
     if (!data.isEmpty())
         emit robotPacketReceived (data);
+
 }
 
 /**
@@ -461,11 +462,14 @@ void Sockets::generateSocketPairs()
         ConfigurableSocket* sender = new ConfigurableSocket (robotSocketType());
         ConfigurableSocket* receiver = new ConfigurableSocket (robotSocketType());
 
-        connect (receiver->socket(), SIGNAL (readyRead()),
-                 this,                 SLOT (readRobotData()));
-
         m_robotSenderList.append (sender);
         m_robotInputSockets.append (receiver);
+
+        connect (receiver, SIGNAL (readyRead()),
+                 this,       SLOT (readRobotData()));
+
+        receiver->tcpSocket()->setSocketOption (MULTICAST_LOOPBACK, 0);
+        receiver->udpSocket()->setSocketOption (MULTICAST_LOOPBACK, 0);
     }
 }
 
