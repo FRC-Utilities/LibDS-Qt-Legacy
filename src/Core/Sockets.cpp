@@ -470,6 +470,7 @@ void Sockets::clearSocketLists()
 void Sockets::generateSocketPairs()
 {
     clearSocketLists();
+
     for (int i = 0; i < socketCount(); ++i) {
         ConfigurableSocket* sender = new ConfigurableSocket (robotSocketType());
         ConfigurableSocket* receiver = new ConfigurableSocket (robotSocketType());
@@ -507,7 +508,7 @@ void Sockets::generateSocketPairs()
  */
 void Sockets::generateLocalNetworkAddresses()
 {
-    if (robotSocketType == DS::kSocketTypeTCP)
+    if (robotSocketType() == DS::kSocketTypeTCP)
         return;
 
     foreach (QNetworkInterface interface, QNetworkInterface::allInterfaces()) {
@@ -516,6 +517,11 @@ void Sockets::generateLocalNetworkAddresses()
 
         if (isUp && isRunning) {
             foreach (QNetworkAddressEntry address, interface.addressEntries()) {
+                if (address.ip().toString() == "127.0.0.1")
+                    return;
+                if (address.ip().isNull())
+                    return;
+
                 QStringList numbers = address.ip().toString().split (".");
 
                 if (numbers.count() == 4) {
