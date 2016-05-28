@@ -56,6 +56,10 @@ DriverStation::DriverStation()
              this,     SIGNAL (cpuUsageChanged (int)));
     connect (config(), SIGNAL (diskUsageChanged (int, int)),
              this,     SIGNAL (diskUsageChanged (int, int)));
+    connect (config(), SIGNAL (elapsedTimeChanged (int)),
+             this,     SIGNAL (elapsedTimeChanged (int)));
+    connect (config(), SIGNAL (elapsedTimeChanged (QString)),
+             this,     SIGNAL (elapsedTimeChanged (QString)));
     connect (config(), SIGNAL (enabledChanged (EnableStatus)),
              this,     SIGNAL (enabledChanged (EnableStatus)));
     connect (config(), SIGNAL (fmsCommStatusChanged (CommStatus)),
@@ -762,6 +766,16 @@ void DriverStation::removeJoystick (const int& id)
 }
 
 /**
+ * Changes the enabled \a status of the robot.
+ * \note This value can be overwritten by the FMS system or the robot
+ *       application itself.
+ */
+void DriverStation::setEnabled (const bool& enabled)
+{
+    setEnabled (enabled ? DS::kEnabled : DS::kDisabled);
+}
+
+/**
  * Loads and configures the given \a protocol in the DS system
  */
 void DriverStation::setProtocol (Protocol* protocol)
@@ -816,6 +830,7 @@ void DriverStation::setProtocol (Protocol* protocol)
         start();
 
         /* Send a message telling that the protocol has been initialized */
+        emit protocolChanged();
         emit newMessage (separator);
         emit newMessage ("<font color=#888>** "
                          + tr ("%1 Initialized").arg (m_protocol->name())
