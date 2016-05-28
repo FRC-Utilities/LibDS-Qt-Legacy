@@ -196,6 +196,9 @@ QByteArray FRC_2014::getFMSPacket()
     return data;
 }
 
+/**
+ * Generates a packet that the DS will send to the robot
+ */
 QByteArray FRC_2014::getRobotPacket()
 {
     QByteArray data;

@@ -8,6 +8,9 @@
 
 #include "FRC_2016.h"
 
+/**
+ * Returns the display name of the protocol
+ */
 QString FRC_2016::name()
 {
     return QObject::tr ("FRC 2016 Protocol");
