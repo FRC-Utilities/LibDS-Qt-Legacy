@@ -6,11 +6,12 @@
  * of this project.
  */
 
-#ifndef _LIB_DS_COMMON_OBJECT_H
-#define _LIB_DS_COMMON_OBJECT_H
+#ifndef _LIB_DS_COMMON_H
+#define _LIB_DS_COMMON_H
 
 #include <QObject>
 #include <QDateTime>
+#include <QStringList>
 
 #define DISABLED_PORT 0
 #define JoystickList QList<DS_Common::Joystick*>

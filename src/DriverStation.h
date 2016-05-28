@@ -33,12 +33,12 @@ public:
     };
 
     enum TeamStation {
-        kRed1 = 0,
-        kRed2 = 1,
-        kRed3 = 2,
+        kRed1  = 0,
+        kRed2  = 1,
+        kRed3  = 2,
         kBlue1 = 3,
         kBlue2 = 4,
-        kBlue3 = 5
+        kBlue3 = 5,
     };
 
     Q_INVOKABLE bool canBeEnabled();

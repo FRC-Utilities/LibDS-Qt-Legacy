@@ -34,7 +34,6 @@ QT += widgets
 QT += multimedia
 
 HEADERS += \
-    $$PWD/src/Core/CommonObject.h \
     $$PWD/src/Core/NetConsole.h \
     $$PWD/src/Core/Protocol.h \
     $$PWD/src/Core/Sockets.h \
@@ -46,7 +45,8 @@ HEADERS += \
     $$PWD/src/DriverStation.h \
     $$PWD/src/Core/DS_Base.h \
     $$PWD/src/Core/DS_Config.h \
-    $$PWD/src/Core/ConfigurableSocket.h
+    $$PWD/src/Core/ConfigurableSocket.h \
+    $$PWD/src/Core/DS_Common.h
 
 SOURCES += \
     $$PWD/src/Core/NetConsole.cpp \

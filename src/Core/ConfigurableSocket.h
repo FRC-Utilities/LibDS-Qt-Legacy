@@ -11,7 +11,7 @@
 
 #include <QTcpSocket>
 #include <QUdpSocket>
-#include <Core/CommonObject.h>
+#include <Core/DS_Common.h>
 
 class ConfigurableSocket
 {

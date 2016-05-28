@@ -9,7 +9,7 @@
 #ifndef _LIB_DS_DRIVERSTATION_BASE_H
 #define _LIB_DS_DRIVERSTATION_BASE_H
 
-#include <Core/CommonObject.h>
+#include <Core/DS_Common.h>
 
 class DS_Base : public DS_Common
 {
