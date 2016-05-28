@@ -85,6 +85,8 @@ DriverStation::DriverStation()
              this,     SIGNAL (teamChanged (int)));
     connect (config(), SIGNAL (voltageChanged (float)),
              this,     SIGNAL (voltageChanged (float)));
+    connect (config(), SIGNAL (voltageChanged (QString)),
+             this,     SIGNAL (voltageChanged (QString)));
     connect (config(), SIGNAL (voltageStatusChanged (VoltageStatus)),
              this,     SIGNAL (voltageStatusChanged (VoltageStatus)));
 

@@ -45,8 +45,8 @@ Window::Window (QWidget* parent) : QMainWindow (parent)
              this,            SLOT (onEnabledChanged()));
 
     /* Update battery voltage */
-    connect (m_driverStation, SIGNAL (voltageChanged (float)),
-             this,              SLOT (updateVoltage  (float)));
+    connect (m_driverStation, SIGNAL (voltageChanged (QString)),
+             this,              SLOT (updateVoltage  (QString)));
 
     /* Update robot status */
     connect (m_driverStation, SIGNAL (statusChanged (QString)),
@@ -122,11 +122,11 @@ void Window::updateControlMode()
     m_driverStation->setControlMode (mode);
 }
 
-void Window::updateVoltage (float voltage)
+void Window::updateVoltage (QString voltage)
 {
     /* We are connected to robot, display voltage */
     if (m_driverStation->isConnectedToRobot())
-        m_ui->Voltage->setText (QString ("%1v").arg (voltage));
+        m_ui->Voltage->setText (voltage);
 
     /* No robot comms, display "--.--" */
     else

@@ -29,7 +29,7 @@ public:
 public slots:
     void onEnabledChanged();
     void updateControlMode();
-    void updateVoltage (float voltage);
+    void updateVoltage (QString voltage);
 
 private:
     Ui::Window* m_ui;

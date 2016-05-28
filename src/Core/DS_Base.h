@@ -109,6 +109,12 @@ signals:
     void voltageChanged (float voltage);
 
     /**
+     * Emitted when the voltage of the robot is changed, the QString is already
+     * formatted by the library
+     */
+    void voltageChanged (QString voltageString);
+
+    /**
      * Emitted when the team number is changed
      */
     void teamChanged (int team);

@@ -188,7 +188,18 @@ void DS_Config::updateVoltage (const float& voltage)
 {
     if (m_voltage != voltage) {
         m_voltage = roundf (voltage * 100) / 100;
+
+        int integer = (int) voltage;
+        int decimal = (float) (voltage - integer) * 10;
+
+        QString integer_str = QString::number (integer);
+        QString decimal_str = QString::number (decimal);
+
+        if (decimal < 10)
+            decimal_str.prepend ("0");
+
         emit voltageChanged (m_voltage);
+        emit voltageChanged (integer_str + "." + decimal_str + " V");
     }
 }
 
