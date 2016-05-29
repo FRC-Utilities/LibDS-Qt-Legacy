@@ -10,8 +10,10 @@
 
 #include <QDir>
 #include <QFile>
+#include <qlogging.h>
 #include <QApplication>
 #include <QElapsedTimer>
+#include <QLoggingCategory>
 
 FILE* DUMP;
 QElapsedTimer TIMER;
