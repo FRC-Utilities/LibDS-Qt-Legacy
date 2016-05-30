@@ -13,6 +13,7 @@
 #include "Core/Watchdog.h"
 #include "Core/DS_Config.h"
 #include "Core/NetConsole.h"
+#include "Core/RobotLogger.h"
 
 #include "Protocols/FRC_2014.h"
 #include "Protocols/FRC_2015.h"
@@ -238,11 +239,27 @@ bool DriverStation::isRobotCodeRunning() const
 }
 
 /**
- * Returns the path in which log files are stored
+ * Returns the path in which different DS-related files are stored
  */
-QString DriverStation::loggerPath() const
+QString DriverStation::filesPath() const
 {
-    return LOGGER_PATH();
+    return DS_FILES_PATH();
+}
+
+/**
+ * Returns the path in which application log files are stored
+ */
+QString DriverStation::appLoggerPath() const
+{
+    return DS_LOGGER_PATH();
+}
+
+/**
+ * Returns the path in which robot log files are stored
+ */
+QString DriverStation::robotLoggerPath() const
+{
+    return DS_ROBOT_LOGGER_PATH();
 }
 
 /**
@@ -779,6 +796,11 @@ void DriverStation::resetJoysticks()
     qDebug() << "Clearing all joysticks";
 
     joysticks()->clear();
+
+    /* Disable robot if not connected to FMS */
+    if (!isConnectedToFMS())
+        setEnabled (false);
+
     emit joystickCountChanged (joystickCount());
 }
 
@@ -831,8 +853,13 @@ void DriverStation::setTeam (const int& team)
  */
 void DriverStation::removeJoystick (const int& id)
 {
-    if (joystickCount() > id)
+    if (joystickCount() > id) {
         joysticks()->removeAt (id);
+
+        /* Disable robot if not connected to FMS */
+        if (!isConnectedToFMS())
+            setEnabled (false);
+    }
 
     emit joystickCountChanged (joystickCount());
 }
@@ -1169,10 +1196,11 @@ void DriverStation::resetRobot()
 
     config()->updateVoltage (0);
     config()->updateEnabled (kDisabled);
-    config()->updateOperationStatus (kOperationNormal);
-    config()->updateRobotCodeStatus (kCodeFailing);
     config()->updateVoltageStatus (kVoltageNormal);
+    config()->updateRobotCodeStatus (kCodeFailing);
     config()->updateRobotCommStatus (kCommsFailing);
+    config()->updateOperationStatus (kOperationNormal);
+    config()->robotLogger()->registerWatchdogTimeout();
 
     emit statusChanged (generalStatus());
 }

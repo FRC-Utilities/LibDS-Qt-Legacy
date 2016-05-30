@@ -13,55 +13,90 @@
 #include <QApplication>
 #include <QElapsedTimer>
 
-FILE* DUMP;
-QElapsedTimer TIMER;
-bool INITIALIZED = false;
-const char* PRINT_FMT  = "%-14s %-13s %-12s\n";
-const QString TIME_FMT = "MMM dd yyyy - HH:mm:ss";
-const QString DUMP_FMT = "ddd MMM dd yyyy - HH_mm_ss";
+/* Ugly hacks to make code more readable */
+#define PRINT_FMT             "%-14s %-13s %-12s\n"
+#define PRINT(string)         QString(string).toLocal8Bit().constData()
+#define GET_DATE_TIME(format) QDateTime::currentDateTime().toString(format)
 
-QString REPEAT (QString input, int reps)
+/* Global variables */
+static FILE* DUMP;
+static QElapsedTimer TIMER;
+static bool INITIALIZED = false;
+
+/**
+ * Repeats the \a input string \a n times and returns the resultant string
+ */
+static QString REPEAT (QString input, int n)
 {
     QString string;
 
-    for (int i = 0; i < reps; ++i)
+    for (int i = 0; i < n; ++i)
         string.append (input);
 
     return string;
 }
 
-QString LOGGER_PATH()
+/**
+ * Returns the path in which several application files are stored (e.g. logs)
+ */
+QString DS_FILES_PATH()
 {
-#ifdef Q_OS_WIN
-    QString baseFolder = "/%1/Logs";
-#else
-    QString baseFolder = "/.%1/Logs";
-#endif
+    QDir dir (QString ("%1/%2").arg (QDir::homePath(), qApp->applicationName()));
 
-    QDir path (QDir::homePath() + baseFolder.arg (qApp->applicationName()));
+    if (!dir.exists())
+        dir.mkpath (".");
 
-    if (!path.exists())
-        path.mkpath (".");
-
-    return path.absolutePath();
+    return dir.absolutePath();
 }
 
-void INIT_LOGGER()
+/**
+ * Figures out where to place the application logs
+ */
+QString DS_LOGGER_PATH()
+{
+    QDir dir = QDir (DS_FILES_PATH() + "/Application Logs");
+
+    if (!dir.exists())
+        dir.mkpath (".");
+
+    return dir.absolutePath();
+}
+
+/**
+ * Figures out where to place robot log files (e.g. containing voltage & other
+ * stuff)
+ */
+QString DS_ROBOT_LOGGER_PATH()
+{
+    QDir dir = QDir (DS_FILES_PATH() + "/Robot Logs");
+    if (!dir.exists())
+        dir.mkpath (".");
+
+    return dir.absolutePath();
+}
+
+/**
+ * Creates the log dump file
+ */
+static void INIT_LOGGER()
 {
     TIMER.start();
 
     /* Construct file name */
-    QString name = QDateTime::currentDateTime().toString (DUMP_FMT);
-    QString fpath = LOGGER_PATH() + "/" + name + ".log";
+    QString fpath = DS_LOGGER_PATH()
+                    + "/"
+                    + GET_DATE_TIME ("ddd MMM dd yyyy - HH_mm_ss AP")
+                    + ".log";
 
     /* Open the dump file */
     DUMP = fopen (fpath.toStdString().c_str(), "a");
-    if (!DUMP) DUMP = stdout;
+    if (!DUMP)
+        DUMP = stdout;
 
     /* Get app info */
     QString appN = qApp->applicationName();
     QString appV = qApp->applicationVersion();
-    QString time = QDateTime::currentDateTime().toString (TIME_FMT);
+    QString time = GET_DATE_TIME ("MMM dd yyyy - HH:mm:ss AP");
 
     /* Format app info */
     time.prepend ("Log created on:      ");
@@ -69,22 +104,29 @@ void INIT_LOGGER()
     appV.prepend ("Application version: ");
 
     /* Append app info */
-    fprintf (DUMP, "%s\n",   time.toStdString().c_str());
-    fprintf (DUMP, "%s\n",   appN.toStdString().c_str());
-    fprintf (DUMP, "%s\n\n", appV.toStdString().c_str());
+    fprintf (DUMP, "%s\n",   PRINT (time));
+    fprintf (DUMP, "%s\n",   PRINT (appN));
+    fprintf (DUMP, "%s\n\n", PRINT (appV));
 
     /* Start the table header */
     fprintf (DUMP, PRINT_FMT, "ELAPSED TIME", "ERROR LEVEL", "MESSAGE");
     fprintf (DUMP, PRINT_FMT,
-             REPEAT ("-", 14).toStdString().c_str(),
-             REPEAT ("-", 13).toStdString().c_str(),
-             REPEAT ("-", 32).toStdString().c_str());
+             PRINT (REPEAT ("-", 14)),
+             PRINT (REPEAT ("-", 13)),
+             PRINT (REPEAT ("-", 32)));
 
     INITIALIZED = true;
 }
 
+/**
+ * Logs the given data to both the dump file and the console
+ *
+ * @param type the message level (error, debug, critical or fatal)
+ * @param context information regarding who and where sent the message
+ * @param message the actual message/data
+ */
 void DS_MESSAGE_HANDLER (QtMsgType type, const QMessageLogContext& context,
-                         const QString& message)
+                         const QString& data)
 {
     Q_UNUSED (context);
 
@@ -116,20 +158,17 @@ void DS_MESSAGE_HANDLER (QtMsgType type, const QMessageLogContext& context,
         level = "CRITICAL";
         break;
     case QtFatalMsg:
-        level = "ERROR_FATAL";
+        level = "FATAL";
         break;
     default:
         level = "SYSTEM";
         break;
     }
 
-    /* Write log message to file and console */
-    fprintf (DUMP, PRINT_FMT,
-             time.toStdString().c_str(),
-             level.toStdString().c_str(),
-             message.toStdString().c_str());
-    fprintf (stderr, PRINT_FMT,
-             time.toStdString().c_str(),
-             level.toStdString().c_str(),
-             message.toStdString().c_str());
+    /* Write all logs to the dump file */
+    fprintf (DUMP,   PRINT_FMT, PRINT (time), PRINT (level), PRINT (data));
+
+    /* Do not log informational messages to the console */
+    if (type != QtDebugMsg)
+        fprintf (stderr, PRINT_FMT, PRINT (time), PRINT (level), PRINT (data));
 }
