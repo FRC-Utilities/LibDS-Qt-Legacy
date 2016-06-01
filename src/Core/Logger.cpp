@@ -10,6 +10,7 @@
 
 #include <QDir>
 #include <QFile>
+#include <QSysInfo>
 #include <QApplication>
 #include <QElapsedTimer>
 
@@ -86,7 +87,7 @@ static void INIT_LOGGER()
     /* Construct file name */
     QString fpath = DS_LOGGER_PATH()
                     + "/"
-                    + GET_DATE_TIME ("ddd MMM dd yyyy - HH_mm_ss AP")
+                    + GET_DATE_TIME ("MMM dd yyyy - HH_mm_ss")
                     + ".log";
 
     /* Open the dump file */
@@ -99,13 +100,29 @@ static void INIT_LOGGER()
     QString appV = qApp->applicationVersion();
     QString time = GET_DATE_TIME ("MMM dd yyyy - HH:mm:ss AP");
 
+    /* Get OS information */
+    QString sysV = "Unknown";
+#if QT_VERSION >= QT_VERSION_CHECK (5, 4, 0)
+    sysV = QSysInfo::prettyProductName();
+#else
+#if defined Q_OS_WIN
+    sysV = "Windows";
+#elif defined Q_OS_MAC
+    sysV = "Mac OSX";
+#elif defined Q_OS_LINUX
+    sysV = "GNU/Linux";
+#endif
+#endif
+
     /* Format app info */
     time.prepend ("Log created on:      ");
+    sysV.prepend ("Operating System:    ");
     appN.prepend ("Application name:    ");
     appV.prepend ("Application version: ");
 
     /* Append app info */
     fprintf (DUMP, "%s\n",   PRINT (time));
+    fprintf (DUMP, "%s\n",   PRINT (sysV));
     fprintf (DUMP, "%s\n",   PRINT (appN));
     fprintf (DUMP, "%s\n\n", PRINT (appV));
 
