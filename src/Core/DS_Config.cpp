@@ -212,17 +212,26 @@ void DS_Config::setEmergencyStop (bool estop) {
 }
 
 void DS_Config::updateVoltage (float voltage) {
+    /* Round voltage to two decimal places */
     m_voltage = roundf (voltage * 100) / 100;
 
+    /* Avoid this: http://i.imgur.com/iAAi1bX.png */
+    if (m_voltage > DriverStation::getInstance()->maxBatteryVoltage())
+        m_voltage = DriverStation::getInstance()->maxBatteryVoltage();
+
+    /* Separate voltage into natural and decimal numbers */
     int integer = (int) voltage;
     int decimal = ((float) (voltage - integer)) * 100;
 
+    /* Convert the obtained numbers into strings */
     QString integer_str = QString::number (integer);
     QString decimal_str = QString::number (decimal);
 
+    /* Prepend a 0 to the decimal numbers if required */
     if (decimal < 10)
         decimal_str.prepend ("0");
 
+    /* Emit signals */
     emit voltageChanged (m_voltage);
     emit voltageChanged (integer_str + "." + decimal_str + " V");
 }
@@ -382,6 +391,5 @@ void DS_Config::updateElapsedTime() {
                                  .arg (QString::number (msec).at (0)));
     }
 
-    QTimer::singleShot (100, Qt::PreciseTimer,
-                        this, SLOT (updateElapsedTime()));
+    DS_Schedule (200, this, SLOT (updateElapsedTime()));
 }
