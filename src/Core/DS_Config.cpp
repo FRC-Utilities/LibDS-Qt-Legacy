@@ -42,8 +42,11 @@ DS_Config::DS_Config() {
 }
 
 DS_Config::~DS_Config() {
-    delete m_timer;
-    delete m_robotLogger;
+    if (m_timer)
+        delete m_timer;
+
+    if (m_robotLogger)
+        delete m_robotLogger;
 }
 
 RobotLogger* DS_Config::robotLogger() {
@@ -220,8 +223,8 @@ void DS_Config::updateVoltage (float voltage) {
         m_voltage = DriverStation::getInstance()->maxBatteryVoltage();
 
     /* Separate voltage into natural and decimal numbers */
-    int integer = (int) voltage;
-    int decimal = ((float) (voltage - integer)) * 100;
+    int integer = static_cast<int>(m_voltage);
+    int decimal = static_cast<float>(m_voltage - integer) * 100;
 
     /* Convert the obtained numbers into strings */
     QString integer_str = QString::number (integer);

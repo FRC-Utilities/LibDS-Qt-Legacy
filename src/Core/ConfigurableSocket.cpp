@@ -16,8 +16,22 @@
  * sockets to send and receive data from the robot.
  */
 ConfigurableSocket::ConfigurableSocket (const DS::SocketType& type) {
+    m_udpSocket = new QUdpSocket (this);
+    m_tcpSocket = new QTcpSocket (this);
+
     m_socketType = type;
     connect (socket(), SIGNAL (readyRead()), this, SIGNAL (readyRead()));
+}
+
+/**
+ * Deletes the sockets
+ */
+ConfigurableSocket::~ConfigurableSocket() {
+    if (m_udpSocket)
+        delete m_udpSocket;
+
+    if (m_tcpSocket)
+        delete m_tcpSocket;
 }
 
 /**
@@ -52,14 +66,14 @@ QString ConfigurableSocket::peerAddress() {
  * Returns a pointer to the TCP socket
  */
 QTcpSocket* ConfigurableSocket::tcpSocket() {
-    return &m_tcpSocket;
+    return m_tcpSocket;
 }
 
 /**
  * Returns a pointer to the UDP socket
  */
 QUdpSocket* ConfigurableSocket::udpSocket() {
-    return &m_udpSocket;
+    return m_udpSocket;
 }
 
 /**
@@ -71,9 +85,9 @@ QUdpSocket* ConfigurableSocket::udpSocket() {
  */
 QAbstractSocket* ConfigurableSocket::socket() {
     if (socketType() == DS::kSocketTypeTCP)
-        return &m_tcpSocket;
+        return m_tcpSocket;
 
-    return &m_udpSocket;
+    return m_udpSocket;
 }
 
 /**
@@ -112,10 +126,10 @@ qint64 ConfigurableSocket::writeDatagram (const QByteArray& data,
 qint64 ConfigurableSocket::writeDatagram (const QByteArray& data,
                                           const QHostAddress& ip, quint16 port) {
     if (socketType() == DS::kSocketTypeUDP)
-        return m_udpSocket.writeDatagram (data, ip, port);
+        return m_udpSocket->writeDatagram (data, ip, port);
 
     if (socketType() == DS::kSocketTypeTCP)
-        return m_tcpSocket.write (data);
+        return m_tcpSocket->write (data);
 
     return -1;
 }
@@ -189,9 +203,9 @@ void ConfigurableSocket::connectToHost (const QHostAddress& host,
                                         quint16 port,
                                         QIODevice::OpenMode mode) {
     if (socketType() == DS::kSocketTypeTCP) {
-        if (m_tcpSocket.state() != QAbstractSocket::UnconnectedState)
-            m_tcpSocket.disconnectFromHost();
+        if (m_tcpSocket->state() != QAbstractSocket::UnconnectedState)
+            m_tcpSocket->disconnectFromHost();
 
-        m_tcpSocket.connectToHost (host, port, mode);
+        m_tcpSocket->connectToHost (host, port, mode);
     }
 }
