@@ -7,7 +7,7 @@ The DriverStation library allows you to connect and manage a robot easily by pro
 
 The library is written in C++ and the Qt framework, allowing it to be used in many platforms, including (but not limited to) Windows, Linux/UNIX distros, Mac OS X, Android and iOS.
 
-The QDriverStation and LibDS have received a lot of support from users and developers like you. To see a complete list of the contributors to these projects, click [here](https://github.com/WinT-3794/QDriverStation/blob/master/CONTRIBUTORS.md).
+The QDriverStation and LibDS have received a lot of support from users and developers like you. To see a complete list of the contributors to these projects, click [here](https://github.com/FRC-Utilities/QDriverStation/blob/master/CONTRIBUTORS.md).
 
 ### Project sections
 
