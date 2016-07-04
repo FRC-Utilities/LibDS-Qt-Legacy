@@ -38,13 +38,17 @@ class FRC_2014 : public Protocol {
     virtual void restartRobotCode();
     virtual void onRobotWatchdogExpired();
 
+    /* Battery information */
+    virtual qreal nominalBatteryVoltage();
+    virtual qreal nominalBatteryAmperage();
+
     /* Information regarding socket types */
     virtual DS::SocketType fmsSocketType();
     virtual DS::SocketType robotSocketType();
 
     /* Default addresses */
-    virtual QString defaultRadioAddress();
-    virtual QString defaultRobotAddress();
+    virtual QString radioAddress();
+    virtual QString robotAddress();
 
     /* Packet generation functions */
     virtual QByteArray getFMSPacket();
@@ -52,14 +56,17 @@ class FRC_2014 : public Protocol {
 
     /* Packet interpretation functions */
     virtual bool interpretFMSPacket (const QByteArray& data);
-    virtual bool interpretRobotPacket(const QByteArray& data);
+    virtual bool interpretRobotPacket (const QByteArray& data);
 
   protected:
-    virtual quint8 getAlliance();
-    virtual quint8 getPosition();
-    virtual quint8 getDigitalInput();
-    virtual quint8 getOperationCode();
+    virtual DS_Byte getAlliance();
+    virtual DS_Byte getPosition();
+    virtual DS_Byte getDigitalInput();
+    virtual DS_Byte getOperationCode();
     virtual QByteArray getJoystickData();
+    virtual DS::Alliance getAlliance (DS_Byte byte);
+    virtual DS::Position getPosition (DS_Byte byte);
+
 
   private:
     bool m_resync;

@@ -62,7 +62,7 @@ static void INIT_LOGGER() {
     /* Construct file name */
     QString fpath = DS_LOGGER_PATH()
                     + "/"
-                    + GET_DATE_TIME ("MMM-dd-yyyy - HH_mm_ss")
+                    + GET_DATE_TIME ("MMM dd yyyy - HH_mm_ss")
                     + ".log";
 
     /* Open the dump file */
@@ -130,7 +130,7 @@ QString DS_FILES_PATH() {
  * Figures out where to place the application logs
  */
 QString DS_LOGGER_PATH() {
-    QDir dir = QDir (DS_FILES_PATH() + "/Application Logs/");
+    QDir dir = QDir (DS_FILES_PATH() + "/app-logs/");
 
     if (!dir.exists())
         dir.mkpath (".");
@@ -143,7 +143,7 @@ QString DS_LOGGER_PATH() {
  * stuff)
  */
 QString DS_ROBOT_LOGGER_PATH() {
-    QDir dir = QDir (DS_FILES_PATH() + "/Robot Logs/");
+    QDir dir = QDir (DS_FILES_PATH() + "/robot-logs/");
     if (!dir.exists())
         dir.mkpath (".");
 

@@ -48,8 +48,8 @@ class FRC_2015 : public Protocol {
     virtual DS::SocketType robotSocketType();
 
     /* Default addresses */
-    virtual QString defaultRadioAddress();
-    virtual QString defaultRobotAddress();
+    virtual QString radioAddress();
+    virtual QString robotAddress();
 
     /* Packet generation functions */
     virtual QByteArray getFMSPacket();
@@ -63,16 +63,16 @@ class FRC_2015 : public Protocol {
     virtual QByteArray getTimezoneData();
     virtual QByteArray getJoystickData();
 
-    virtual DS::Alliance getAlliance (quint8 station);
-    virtual DS::Position getPosition (quint8 station);
+    virtual DS::Alliance getAlliance (DS_Byte station);
+    virtual DS::Position getPosition (DS_Byte station);
 
     virtual void readExtended (const QByteArray& data);
 
-    virtual uint getControlCode();
-    virtual uint getRequestCode();
-    virtual uint getFMSControlCode();
-    virtual uint getTeamStationCode();
-    virtual uint getJoystickSize (const DS::Joystick& joystick);
+    virtual DS_Byte getControlCode();
+    virtual DS_Byte getRequestCode();
+    virtual DS_Byte getFMSControlCode();
+    virtual DS_Byte getTeamStationCode();
+    virtual DS_Byte getJoystickSize (const DS::Joystick& joystick);
 
   private:
     bool m_restartCode;

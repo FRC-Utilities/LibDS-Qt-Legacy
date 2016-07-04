@@ -9,35 +9,37 @@
 #include "FRC_2014.h"
 
 /**
- * Represents the basic operation codes of the robot
+ * Constants used to encode the control byte
  */
 enum Control {
-    kEnabled          = 0x20, /**< Enabled flag */
-    kTestMode         = 0x02, /**< Test operation mode */
-    kAutonomous       = 0x10, /**< Autonomous operation mode */
-    kTeleoperated     = 0x00, /**< Teleoperated operation mode */
-    kFMS_Attached     = 0x08, /**< Sent to robot when we are connected to FMS */
-    kEmergencyStopOn  = 0x00, /**< Robot program is stopped */
-    kEmergencyStopOff = 0x40, /**< Normal operation of the robot program */
+    cEnabled          = 0x20, /**< DS enables the robot */
+    cTestMode         = 0x02, /**< Set operation mode to test mode */
+    cAutonomous       = 0x10, /**< Set operation mode to autonomous mode */
+    cTeleoperated     = 0x00, /**< Set operation mode to teleoperated mode */
+    cFMS_Attached     = 0x08, /**< Sent when DS has comms. with FMS */
+    cResyncComms      = 0x04, /**< Resyncs the communications with robot */
+    cRebootRobot      = 0x80, /**< Reboots the robot controller */
+    cEmergencyStopOn  = 0x00, /**< Enables the emergency stop */
+    cEmergencyStopOff = 0x40, /**< Disables the emergency stop */
 };
 
 /**
- * Represents the special instructions that we can send to the robot
- */
-enum Instructions {
-    kResyncComms = 0x04, /**< Resyncs the DS and the robot loops */
-    kRebootRobot = 0x80, /**< Restarts the robot controller */
-};
-
-/**
- * Represents the available team station
+ * Constants used to encode the alliance and position of the robot
  */
 enum Stations {
-    kPosition1    = 0x31, /**< Position 1 on any alliance */
-    kPosition2    = 0x32, /**< Position 2 on any alliance */
-    kPosition3    = 0x33, /**< Position 3 on any alliance */
-    kAllianceRed  = 0x52, /**< Set alliance to red */
-    kAllianceBlue = 0x42, /**< Set alliance to blue */
+    cPosition1    = 0x31, /**< Position 1 */
+    cPosition2    = 0x32, /**< Position 2 */
+    cPosition3    = 0x33, /**< Position 3 */
+    cAllianceRed  = 0x52, /**< Red alliance */
+    cAllianceBlue = 0x42, /**< Blue alliance */
+};
+
+/**
+ * Constants used to encode the FMS states
+ */
+enum FMS {
+    cFMSAutonomous   = 0x53, /**< Sent by FMS to switch robot mode to Auto */
+    cFMSTeleoperated = 0x43, /**< Sent by FMS to switch robot mode to Teleop */
 };
 
 /**
@@ -57,10 +59,10 @@ QString FRC_2014::name() {
 }
 
 /**
- * Send FMS packets 2 times per second
+ * Send 10 FMS packets per second
  */
 int FRC_2014::fmsFrequency() {
-    return 2;
+    return 10;
 }
 
 /**
@@ -156,6 +158,20 @@ void FRC_2014::onRobotWatchdogExpired() {
 }
 
 /**
+ * Returns the nominal/maximum voltage given by the robot battery.
+ */
+qreal FRC_2014::nominalBatteryVoltage() {
+    return 12.8;
+}
+
+/**
+ * Returns the nominal amperage given by the robot battery
+ */
+qreal FRC_2014::nominalBatteryAmperage() {
+    return 17;
+}
+
+/**
  * FMS communications work with UDP datagrams
  */
 DS::SocketType FRC_2014::fmsSocketType() {
@@ -172,14 +188,14 @@ DS::SocketType FRC_2014::robotSocketType() {
 /**
  * Radio is located at 10.TE.AM.1
  */
-QString FRC_2014::defaultRadioAddress() {
+QString FRC_2014::radioAddress() {
     return DS::getStaticIP (10, config()->team(), 1);
 }
 
 /**
  * Robot is located at 10.TE.AM.2
  */
-QString FRC_2014::defaultRobotAddress() {
+QString FRC_2014::robotAddress() {
     return DS::getStaticIP (10, config()->team(), 2);
 }
 
@@ -220,18 +236,18 @@ QByteArray FRC_2014::getRobotPacket() {
     data.replace (8, joysticks.length(), joysticks);
 
     /* Add FRC Driver Station version (same as the one sent by 16.0.1) */
-    data[72] = (quint8) 0x30;
-    data[73] = (quint8) 0x34;
-    data[74] = (quint8) 0x30;
-    data[75] = (quint8) 0x31;
-    data[76] = (quint8) 0x31;
-    data[77] = (quint8) 0x36;
-    data[78] = (quint8) 0x30;
-    data[79] = (quint8) 0x30;
+    data[72] = (DS_Byte) 0x30;
+    data[73] = (DS_Byte) 0x34;
+    data[74] = (DS_Byte) 0x30;
+    data[75] = (DS_Byte) 0x31;
+    data[76] = (DS_Byte) 0x31;
+    data[77] = (DS_Byte) 0x36;
+    data[78] = (DS_Byte) 0x30;
+    data[79] = (DS_Byte) 0x30;
 
     /* Add CRC checksum */
     m_crc32.update (data);
-    uint checksum = m_crc32.value();
+    DS_Byte checksum = m_crc32.value();
     data[1020] = (checksum & 0xff000000) >> 24;
     data[1021] = (checksum & 0xff0000) >> 16;
     data[1022] = (checksum & 0xff00) >> 8;
@@ -241,11 +257,53 @@ QByteArray FRC_2014::getRobotPacket() {
 }
 
 /**
- * \todo Implement this function
+ * Gets the team station and robot mode from the FMS
  */
 bool FRC_2014::interpretFMSPacket (const QByteArray& data) {
-    Q_UNUSED (data);
-    return false;
+    /* The packet is smaller than what it should be */
+    if (data.length() < 74) {
+        qWarning() << name() << "received an invalid FMS packet";
+        return false;
+    }
+
+    /* Read the parts of the packet that interest us */
+    DS_Byte robotmod = data.at (2);
+    DS_Byte alliance = data.at (3);
+    DS_Byte position = data.at (4);
+
+    /* Get the operation mode & enable status */
+    DS::ControlMode mode;
+    DS::EnableStatus enabled;
+    switch (robotmod) {
+    case (cFMSAutonomous):
+        enabled = DS::kDisabled;
+        mode = DS::kControlAutonomous;
+        break;
+    case (cFMSAutonomous | cEnabled):
+        enabled = DS::kEnabled;
+        mode = DS::kControlAutonomous;
+        break;
+    case (cFMSTeleoperated):
+        enabled = DS::kDisabled;
+        mode = DS::kControlTeleoperated;
+        break;
+    case (cFMSTeleoperated | cEnabled):
+        enabled = DS::kEnabled;
+        mode = DS::kControlTeleoperated;
+        break;
+    default:
+        enabled = DS::kDisabled;
+        mode = DS::kControlTeleoperated;
+        break;
+    }
+
+    /* Set robot mode and team station */
+    config()->updateEnabled (enabled);
+    config()->updateControlMode (mode);
+    config()->updateAlliance (getAlliance (alliance));
+    config()->updatePosition (getPosition (position));
+
+    return true;
 }
 
 /**
@@ -258,16 +316,16 @@ bool FRC_2014::interpretFMSPacket (const QByteArray& data) {
  *       the robot code is not running
  */
 bool FRC_2014::interpretRobotPacket (const QByteArray& data) {
-    /* The packet is smaller than it should be */
+    /* The packet is smaller than what it should be */
     if (data.length() < 1024) {
         qWarning() << name() << "received an invalid robot packet";
         return false;
     }
 
     /* Read status echo code and voltage */
-    uint opcode  = data.at (0);
-    quint8 integer = data.at (1);
-    quint8 decimal = data.at (2);
+    DS_Byte opcode  = data.at (0);
+    DS_Byte integer = data.at (1);
+    DS_Byte decimal = data.at (2);
 
     /* Parse the voltage (which is stored in a strange format) */
     QString voltage;
@@ -279,7 +337,7 @@ bool FRC_2014::interpretRobotPacket (const QByteArray& data) {
     voltage.append (hex.at (5));
 
     /* The robot seems to be emergency stopped */
-    if (opcode == kEmergencyStopOn && !config()->isEmergencyStopped())
+    if (opcode == cEmergencyStopOn && !config()->isEmergencyStopped())
         config()->updateOperationStatus (DS::kEmergencyStop);
 
     /* Update code status & voltage */
@@ -298,33 +356,33 @@ bool FRC_2014::interpretRobotPacket (const QByteArray& data) {
 /**
  * Returns the code that represents the current alliance color
  */
-quint8 FRC_2014::getAlliance() {
+DS_Byte FRC_2014::getAlliance() {
     if (config()->alliance() == DS::kAllianceBlue)
-        return kAllianceBlue;
+        return cAllianceBlue;
 
-    return kAllianceRed;
+    return cAllianceRed;
 }
 
 /**
  * Returns the code that represents the current team position
  */
-quint8 FRC_2014::getPosition() {
+DS_Byte FRC_2014::getPosition() {
     if (config()->position() == DS::kPosition1)
-        return kPosition1;
+        return cPosition1;
 
     if (config()->position() == DS::kPosition2)
-        return kPosition2;
+        return cPosition2;
 
     if (config()->position() == DS::kPosition3)
-        return kPosition3;
+        return cPosition3;
 
-    return kPosition1;
+    return cPosition1;
 }
 
 /**
  * \todo Allow the LibDS to support digital inputs
  */
-quint8 FRC_2014::getDigitalInput() {
+DS_Byte FRC_2014::getDigitalInput() {
     return 0x00;
 }
 
@@ -332,36 +390,41 @@ quint8 FRC_2014::getDigitalInput() {
  * Returns the code used to identify the enable status, control mode,
  * operation mode and operation flags.
  */
-quint8 FRC_2014::getOperationCode() {
-    quint8 code = kEmergencyStopOff;
-    quint8 enabled = config()->isEnabled() ? kEnabled : 0x00;
+DS_Byte FRC_2014::getOperationCode() {
+    DS_Byte code = cEmergencyStopOff;
+    DS_Byte enabled = config()->isEnabled() ? cEnabled : 0x00;
 
+    /* Get the control mode (Test, Auto or TeleOp) */
     switch (config()->controlMode()) {
     case DS::kControlTest:
-        code |= enabled + kTestMode;
+        code |= enabled + cTestMode;
         break;
     case DS::kControlAutonomous:
-        code |= enabled + kAutonomous;
+        code |= enabled + cAutonomous;
         break;
     case DS::kControlTeleoperated:
-        code |= enabled + kTeleoperated;
+        code |= enabled + cTeleoperated;
         break;
     default:
-        code = kEmergencyStopOff;
+        code = cEmergencyStopOff;
         break;
     }
 
+    /* Resync robot communications */
     if (m_resync)
-        code |= kResyncComms;
+        code |= cResyncComms;
 
+    /* Let robot know if we are connected to FMS */
     if (config()->isFMSAttached())
-        code |= kFMS_Attached;
+        code |= cFMS_Attached;
 
+    /* Set the emergency stop state */
     if (config()->isEmergencyStopped())
-        code = kEmergencyStopOn;
+        code = cEmergencyStopOn;
 
+    /* Send the reboot code if required */
     if (m_rebootRobot)
-        code = kRebootRobot;
+        code = cRebootRobot;
 
     return code;
 }
@@ -379,25 +442,58 @@ QByteArray FRC_2014::getJoystickData() {
     for (int i = 0; i < maxJoystickCount(); ++i) {
         bool joystickExists = joysticks()->count() > i;
 
+        /* Get number of axes & buttons */
         int numAxes = joystickExists ? joysticks()->at (i)->numAxes : 0;
         int numButtons = joystickExists ? joysticks()->at (i)->numButtons : 0;
 
+        /* Add axis values */
         for (int axis = 0; axis < maxAxisCount(); ++axis) {
+            /* Joystick connected, add real data */
             if (joystickExists && axis < numAxes)
                 data.append (joysticks()->at (i)->axes [axis] * 127);
+
+            /* Joystick disconnected, add neutral data */
             else
-                data.append (static_cast<char>(0x00));
+                data.append (static_cast<char> (0x00));
         }
 
+        /* Calculate value of buttons */
         int button_data = 0;
         for (int button = 0; button < numButtons; ++button) {
             if (joystickExists && joysticks()->at (i)->buttons [button])
-                button_data |= static_cast<int>(qPow (2, button));
+                button_data |= static_cast<int> (qPow (2, button));
         }
 
+        /* Add button data */
         data.append ((button_data & 0xff00) >> 8);
         data.append ((button_data & 0xff));
     }
 
     return data;
+}
+
+/**
+ * Gets the alliance from the received \a byte
+ */
+DS::Alliance FRC_2014::getAlliance (DS_Byte byte) {
+    if (byte == cAllianceBlue)
+        return DS::kAllianceBlue;
+
+    return DS::kAllianceRed;
+}
+
+/**
+ * Gets the position from the received \a byte
+ */
+DS::Position FRC_2014::getPosition (DS_Byte byte) {
+    if (byte == cPosition1)
+        return DS::kPosition1;
+
+    if (byte == cPosition2)
+        return DS::kPosition2;
+
+    if (byte == cPosition3)
+        return DS::kPosition3;
+
+    return DS::kPosition1;
 }

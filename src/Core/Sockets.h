@@ -11,6 +11,7 @@
 
 #include <Core/DS_Base.h>
 
+class DriverStation;
 class Sockets : public QObject {
     Q_OBJECT
 
@@ -28,6 +29,7 @@ class Sockets : public QObject {
     QHostAddress robotAddress() const;
 
   public slots:
+    void performLookups();
     void setFMSInputPort (int port);
     void setFMSOutputPort (int port);
     void setRadioInputPort (int port);
@@ -64,9 +66,15 @@ class Sockets : public QObject {
     int m_radioOutputPort;
     int m_robotOutputPort;
 
+    int m_fmsLookupId;
+    int m_radioLookupId;
+    int m_robotLookupId;
+
     QHostAddress m_fmsAddress;
     QHostAddress m_robotAddress;
     QHostAddress m_radioAddress;
+
+    DriverStation* m_driverStation;
 
     QUdpSocket* m_udpFmsSender;
     QTcpSocket* m_tcpFmsSender;
