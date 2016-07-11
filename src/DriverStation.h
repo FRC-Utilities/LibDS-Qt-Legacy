@@ -77,6 +77,7 @@ class DriverStation : public DS_Base {
     Q_INVOKABLE bool isRobotCodeRunning() const;
 
     Q_INVOKABLE QString logsPath() const;
+    Q_INVOKABLE QVariant logVariant() const;
     Q_INVOKABLE QStringList availableLogs() const;
     Q_INVOKABLE QJsonDocument logDocument() const;
 
@@ -193,9 +194,9 @@ class DriverStation : public DS_Base {
     int m_radioInterval;
     int m_robotInterval;
 
-    QJsonDocument m_logDocument;
     DS_Joysticks m_joysticks;
     QString m_customFMSAddress;
+    QJsonDocument m_logDocument;
     QString m_customRadioAddress;
     QString m_customRobotAddress;
 

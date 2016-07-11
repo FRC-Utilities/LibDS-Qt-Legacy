@@ -294,6 +294,13 @@ QString DriverStation::logsPath() const {
 }
 
 /**
+ * Returns the current JSON document as a variant list
+ */
+QVariant DriverStation::logVariant() const {
+    return logDocument().toVariant();
+}
+
+/**
  * Returns a list with all the robot logs saved to the logs path
  */
 QStringList DriverStation::availableLogs() const {
