@@ -14,20 +14,26 @@
 class QElapsedTimer;
 
 /**
- * \brief Logs robot-related variables, such as voltage and CPU usage
- *
- * This can be used later to diagnostic the operation of the robot or one of
- * its components.
+ * \brief Logs robot data and application messages
+ * This can be later used to diagnostic the robot or to diagnostic the
+ * QDriverStation.
  */
-class RobotLogger : public QObject {
+class Logger : public QObject {
     Q_OBJECT
 
   public:
-    RobotLogger();
-    ~RobotLogger();
+    explicit Logger();
+
+    QString logsPath() const;
+    QString extension() const;
+    QStringList availableLogs() const;
+
+    void messageHandler (QtMsgType type,
+                         const QMessageLogContext& context,
+                         const QString& data);
 
   public slots:
-    void registerWatchdogTimeout();
+    void saveLogs();
     void registerVoltage (qreal voltage);
     void registerPacketLoss (int pktLoss);
     void registerRobotRAMUsage (int usage);
@@ -43,10 +49,17 @@ class RobotLogger : public QObject {
     void registerOperationStatus (DS::OperationStatus status);
 
   private slots:
-    void serializeLogs();
+    void closeLogs();
+    void initializeLogger();
 
   private:
     QElapsedTimer* m_timer;
+
+    FILE* m_dump;
+    bool m_closed;
+    bool m_initialized;
+    QString m_logFilePath;
+    QString m_dumpFilePath;
 
     int m_previousRAM;
     int m_previousCPU;

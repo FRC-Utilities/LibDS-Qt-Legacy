@@ -13,12 +13,13 @@
 #include "Core/Watchdog.h"
 #include "Core/DS_Config.h"
 #include "Core/NetConsole.h"
-#include "Core/RobotLogger.h"
+#include "Core/Logger.h"
 
 #include "Protocols/FRC_2014.h"
 #include "Protocols/FRC_2015.h"
 #include "Protocols/FRC_2016.h"
 
+#include <QDir>
 #include <QUrl>
 #include <QDesktopServices>
 
@@ -140,8 +141,6 @@ DriverStation::DriverStation() {
 }
 
 DriverStation::~DriverStation() {
-    qDebug() << "Stopping the Driver Station...";
-
     /* Stop operations */
     stop();
 
@@ -152,11 +151,8 @@ DriverStation::~DriverStation() {
     delete m_radioWatchdog;
     delete m_robotWatchdog;
 
-    /* Append to log */
-    qDebug() << "Driver Station terminated";
-
-    /* Ensure that the log is closed */
-    DS_CLOSE_LOGS();
+    /* Save logs */
+    config()->logger()->saveLogs();
 }
 
 /**
@@ -168,6 +164,17 @@ DriverStation::~DriverStation() {
 DriverStation* DriverStation::getInstance() {
     static DriverStation instance;
     return &instance;
+}
+
+/**
+ * Calls the custom Qt message handler of the LibDS
+ */
+void DriverStation::logger (QtMsgType type,
+                            const QMessageLogContext& context,
+                            const QString& data) {
+    DS_Config::getInstance()->logger()->messageHandler (type,
+            context,
+            data);
 }
 
 /**
@@ -273,24 +280,17 @@ bool DriverStation::isRobotCodeRunning() const {
 }
 
 /**
- * Returns the path in which different DS-related files are stored
- */
-QString DriverStation::filesPath() const {
-    return DS_FILES_PATH();
-}
-
-/**
  * Returns the path in which application log files are stored
  */
-QString DriverStation::appLoggerPath() const {
-    return DS_APP_LOGGER_PATH();
+QString DriverStation::logsPath() const {
+    return config()->logger()->logsPath();
 }
 
 /**
- * Returns the path in which robot log files are stored
+ * Returns a list with all the robot logs saved to the logs path
  */
-QString DriverStation::robotLoggerPath() const {
-    return DS_ROBOT_LOGGER_PATH();
+QStringList DriverStation::availableLogs() const {
+    return config()->logger()->availableLogs();
 }
 
 /**
@@ -853,7 +853,7 @@ void DriverStation::enableRobot() {
  * Opens the application logs in an explorer window
  */
 void DriverStation::openLogsPath() {
-    QDesktopServices::openUrl (QUrl::fromLocalFile (appLoggerPath()));
+    QDesktopServices::openUrl (QUrl::fromLocalFile (logsPath()));
 }
 
 /**
@@ -1284,11 +1284,10 @@ void DriverStation::resetRobot() {
     config()->updateVoltage (0);
     config()->updateSimulated (false);
     config()->updateEnabled (kDisabled);
+    config()->updateOperationStatus (kNormal);
     config()->updateVoltageStatus (kVoltageNormal);
     config()->updateRobotCodeStatus (kCodeFailing);
     config()->updateRobotCommStatus (kCommsFailing);
-    config()->updateOperationStatus (kNormal);
-    config()->robotLogger()->registerWatchdogTimeout();
 
     emit statusChanged (generalStatus());
 }
@@ -1346,7 +1345,7 @@ void DriverStation::sendRobotPacket() {
  * Calculates the current packet loss as a percent
  */
 void DriverStation::updatePacketLoss() {
-    qreal loss = 100;
+    qreal loss = 0;
     qreal sentPackets = 0;
     qreal recvPackets = 0;
 
@@ -1357,12 +1356,14 @@ void DriverStation::updatePacketLoss() {
     }
 
     /* Calculate packet loss */
-    if (recvPackets > 0 && recvPackets < sentPackets)
+    if (recvPackets > 0 && sentPackets > 0)
         loss = (1 - (recvPackets / sentPackets)) * 100;
+    else if (!isConnectedToRobot())
+        loss = 100;
 
     /* Update packet loss */
-    m_packetLoss = qMax (1, static_cast<int> (loss));
-    config()->robotLogger()->registerPacketLoss (m_packetLoss);
+    m_packetLoss = static_cast<int> (loss);
+    config()->logger()->registerPacketLoss (m_packetLoss);
 
     /* Schedule next loss calculation */
     DS_Schedule (250, this, SLOT (updatePacketLoss()));
