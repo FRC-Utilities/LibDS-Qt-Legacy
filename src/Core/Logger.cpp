@@ -10,7 +10,6 @@
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QApplication>
-#include <QJsonDocument>
 #include <QElapsedTimer>
 
 #include "Logger.h"
@@ -68,6 +67,21 @@ QString Logger::extension() const {
 QStringList Logger::availableLogs() const {
     QString filter = "*." + extension();
     return QDir (logsPath()).entryList (QStringList (filter));
+}
+
+/**
+ * Opens the given log \a file and parses its JSON data
+ */
+QJsonDocument Logger::openLog (const QString& name) const {
+    QFile file (name);
+    QJsonDocument document;
+
+    if (file.open (QFile::ReadOnly)) {
+        document = QJsonDocument::fromBinaryData (file.readAll());
+        file.close();
+    }
+
+    return document;
 }
 
 /**
@@ -281,7 +295,7 @@ void Logger::saveLogs() {
     document.setArray (array);
     QFile file (m_logFilePath);
     if (file.open (QFile::WriteOnly)) {
-        file.write (document.toJson (QJsonDocument::Compact));
+        file.write (document.toBinaryData());
         file.close();
     }
 }

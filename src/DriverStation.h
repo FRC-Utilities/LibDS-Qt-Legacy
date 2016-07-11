@@ -36,6 +36,7 @@ class DriverStation : public DS_Base {
   signals:
     void resetted();
     void initialized();
+    void logFileChanged();
     void protocolChanged();
     void newMessage (QString message);
     void joystickCountChanged (int count);
@@ -77,6 +78,7 @@ class DriverStation : public DS_Base {
 
     Q_INVOKABLE QString logsPath() const;
     Q_INVOKABLE QStringList availableLogs() const;
+    Q_INVOKABLE QJsonDocument logDocument() const;
 
     Q_INVOKABLE qreal maxBatteryVoltage() const;
     Q_INVOKABLE qreal currentBatteryVoltage() const;
@@ -131,24 +133,26 @@ class DriverStation : public DS_Base {
 
   public slots:
     void init();
+    void browseLogs();
     void rebootRobot();
     void enableRobot();
     void openLogsPath();
     void disableRobot();
     void resetJoysticks();
+    void setTeam (int team);
     void restartRobotCode();
     void switchToTestMode();
     void switchToAutonomous();
     void switchToTeleoperated();
     void reconfigureJoysticks();
-    void setTeam (int team);
     void removeJoystick (int id);
     void setEnabled (bool enabled);
-    void setProtocol (Protocol* protocol);
     void setTeamStation (int station);
+    void openLog (const QString& file);
     void setProtocolType (int protocol);
     void setAlliance (Alliance alliance);
     void setPosition (Position position);
+    void setProtocol (Protocol* protocol);
     void setControlMode (ControlMode mode);
     void updatePOV (int id, int pov, int angle);
     void setEnabled (EnableStatus statusChanged);
@@ -189,6 +193,7 @@ class DriverStation : public DS_Base {
     int m_radioInterval;
     int m_robotInterval;
 
+    QJsonDocument m_logDocument;
     DS_Joysticks m_joysticks;
     QString m_customFMSAddress;
     QString m_customRadioAddress;
