@@ -22,6 +22,9 @@ class QElapsedTimer;
 class Logger : public QObject {
     Q_OBJECT
 
+  signals:
+    void logsSaved (const QString& file);
+
   public:
     explicit Logger();
 
@@ -36,6 +39,7 @@ class Logger : public QObject {
 
   public slots:
     void saveLogs();
+    void closeLogs();
     void registerInitialEvents();
     void registerVoltage (qreal voltage);
     void registerPacketLoss (int pktLoss);
@@ -49,13 +53,14 @@ class Logger : public QObject {
     void registerRadioCommStatus (DS::CommStatus status);
     void registerRobotCommStatus (DS::CommStatus status);
     void registerVoltageStatus (DS::VoltageStatus status);
+    void registerNetConsoleMessage (const QString& message);
     void registerOperationStatus (DS::OperationStatus status);
 
   private slots:
-    void closeLogs();
     void initializeLogger();
 
   private:
+    QString m_netConsole;
     QElapsedTimer* m_timer;
     bool m_eventsRegistered;
 

@@ -151,15 +151,21 @@ DriverStation::DriverStation() {
     connect (m_robotWatchdog, SIGNAL (expired()), this, SLOT (resetRobot()));
 
     /* Notify client when the NetConsole receives a new message */
-    connect (m_console, SIGNAL (newMessage (QString)),
-             this,      SIGNAL (newMessage (QString)));
+    connect (m_console,        SIGNAL (newMessage (QString)),
+             this,             SIGNAL (newMessage (QString)));
+    connect (m_console,        SIGNAL (newMessage (QString)),
+             config()->logger(), SLOT (registerNetConsoleMessage (QString)));
+
+    /* Update the current log file when the logger saves it (for live UI logs) */
+    connect (config()->logger(), SIGNAL (logsSaved  (QString)),
+             this,                 SLOT (updateLogs (QString)));
 
     qDebug() << "DriverStation initialized!";
 }
 
 DriverStation::~DriverStation() {
     stop();
-    config()->logger()->saveLogs();
+    config()->logger()->closeLogs();
 }
 
 /**
@@ -1047,6 +1053,7 @@ void DriverStation::setTeamStation (int station) {
  * Opens the given log file \a file and parses it as a JSON document
  */
 void DriverStation::openLog (const QString& file) {
+    m_logDocumentPath = file;
     m_logDocument = config()->logger()->openLog (file);
     emit logFileChanged();
 }
@@ -1425,6 +1432,14 @@ void DriverStation::updatePacketLoss() {
 void DriverStation::updateAddresses (int unused) {
     Q_UNUSED (unused);
     updateAddresses();
+}
+
+/**
+ * Used to ensure that the log feed of the UI is constantly updated
+ */
+void DriverStation::updateLogs (const QString& file) {
+    if (m_logDocumentPath.isEmpty() || file == m_logDocumentPath)
+        openLog (file);
 }
 
 /**
