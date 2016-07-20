@@ -964,6 +964,14 @@ void DriverStation::switchToTeleoperated() {
 }
 
 /**
+ * Disables the robot and triggers an emergency stop on the robot
+ */
+void DriverStation::triggerEmergencyStop() {
+    setEnabled (DS::kDisabled);
+    setOperationStatus (DS::kEmergencyStop);
+}
+
+/**
  * Re-registers all joysticks based on the criteria specified by the new
  * protocol.
  *
