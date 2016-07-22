@@ -65,6 +65,12 @@ MulticastDNS::MulticastDNS() {
 
 /**
  * Performs a mDNS lookup to find the IP address of the given host \a name.
+ *
+ * \note If the \c alreadySupported() function returns \c true, then this class
+ *       will use the native implementation of the OS to find the given host
+ *       \a name.
+ * \note If the \c alreadySupported() function returns \c false, then this class
+ *       will perform the mDNS lookup by itself using Qt socket programming.
  */
 void MulticastDNS::lookup (const QString& name) {
     if (!name.isEmpty()) {
@@ -95,7 +101,7 @@ void MulticastDNS::lookup (const QString& name) {
         QString local = "local";
         data.append (local.length());
         data.append (local.toUtf8());
-        data.append ((qint8) 0x00);
+        data.append ((char) 0x00);
         data.append (TWO_BYTES (kQueryQTYPE));
         data.append (TWO_BYTES (kQueryQCLASS));
 
