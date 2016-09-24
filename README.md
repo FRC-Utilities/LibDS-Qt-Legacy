@@ -1,6 +1,6 @@
 # LibDS (Legacy Version)
 
-[![Build Status](https://img.shields.io/travis/FRC-Utilities/LibDS.svg?style=flat-square)](https://travis-ci.org/FRC-Utilities/LibDS)
+[![Build Status](https://img.shields.io/travis/FRC-Utilities/LibDS-Legacy.svg?style=flat-square)](https://travis-ci.org/FRC-Utilities/LibDS-Legacy)
 [![Donate button](https://img.shields.io/badge/bitcoin-donate-brightgreen.svg?style=flat-square)](https://blockchain.info/address/1K85yLxjuqUmhkjP839R7C23XFhSxrefMx "Donate once-off to this project using BitCoin")
 
 This is the legacy version of LibDS, which was written with C++ and Qt. The [new version](https://github.com/frc-utilities/libds) is written in C and provides some additional features.
